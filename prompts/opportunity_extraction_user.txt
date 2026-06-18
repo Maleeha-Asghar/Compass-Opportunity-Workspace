@@ -1,0 +1,72 @@
+Extract opportunity information from the webpage content below.
+
+Return JSON only.
+
+Required Schema:
+
+{{
+  "is_opportunity": boolean,
+
+  "title": string | null,
+  "provider": string | null,
+  "opportunity_type": string | null,
+
+  "country": string | null,
+  "location": string | null,
+
+  "funding_type": string | null,
+
+  "deadline": string | null,
+  "deadline_text": string | null,
+
+  "application_open_date": string | null,
+  "program_start_date": string | null,
+
+  "degree_level": [],
+  "field_of_study": [],
+
+  "eligible_countries": [],
+  "eligibility_requirements": [],
+
+  "required_documents": [],
+
+  "benefits": [],
+
+  "application_url": string | null,
+
+  "official_url": string | null,
+
+  "contact_email": string | null,
+
+  "source_confidence": "high|medium|low",
+
+  "summary": string | null,
+
+  "warnings": []
+}}
+
+Rules:
+
+1. Only extract information explicitly stated.
+2. Do not guess missing values.
+3. Preserve exact deadlines when possible.
+4. Convert dates to YYYY-MM-DD when clearly identifiable.
+5. If multiple deadlines exist, choose the application deadline.
+6. Put alternative deadlines in warnings.
+7. If no opportunity exists, set is_opportunity=false.
+8. Keep summary under 100 words.
+9. If the page appears outdated, add a warning.
+10. If funding is unclear, do not assume it is fully funded.
+
+Source URL: {source_url}
+Page title: {title}
+
+Deadline analysis (if available):
+{deadline_analysis}
+
+Table rows (if available):
+{table_data}
+
+Webpage Content:
+
+{content}

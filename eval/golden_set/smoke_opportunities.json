@@ -1,0 +1,12 @@
+[
+  {
+    "id": "daad-data-science-2027",
+    "source_text": "DAAD scholarship for international Data Science master students in Germany. Fully funded. Deadline 2027-08-15. Required documents: CV, Transcript, Statement of purpose.",
+    "expected": {"title_contains": "DAAD", "country": "Germany", "funding_type": "Fully funded", "deadline": "2027-08-15", "payment_requested": false}
+  },
+  {
+    "id": "paid-processing-warning",
+    "source_text": "Global scholarship assistance. Guaranteed scholarship processing. Application fee required before review. Deadline 2027-10-01.",
+    "expected": {"deadline": "2027-10-01", "payment_requested": true}
+  }
+]

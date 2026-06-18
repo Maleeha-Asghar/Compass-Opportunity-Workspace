@@ -1,0 +1,2 @@
+Check whether the generated document contains unsupported claims.
+Return JSON with grounding_flags for any claim not grounded in the provided profile, CV, or opportunity data.

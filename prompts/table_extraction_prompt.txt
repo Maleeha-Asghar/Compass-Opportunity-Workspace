@@ -1,0 +1,22 @@
+You are extracting opportunity information from tabular data.
+
+Convert the table rows into structured JSON.
+
+For every row extract:
+
+{{
+  "title": "",
+  "country": "",
+  "deadline": "",
+  "funding": "",
+  "provider": "",
+  "application_url": ""
+}}
+
+Do not merge rows.
+
+Return JSON array only under key "rows".
+
+Table:
+
+{table_data}

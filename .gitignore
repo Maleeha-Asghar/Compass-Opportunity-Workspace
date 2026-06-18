@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+backend-live.log
+backend-live.err.log
+frontend-live.log
+frontend-live.err.log
+
+# Frontend / Node
+node_modules/
+frontend/react/node_modules/
+frontend/react/dist/
+frontend/react/.vite/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Supabase / local data
+supabase/.temp/
+supabase/.branches/
+

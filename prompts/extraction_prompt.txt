@@ -1,0 +1,4 @@
+Extract structured opportunity information from the provided source text.
+Use null for missing fields.
+Never invent deadlines, funding, eligibility, application URLs, or contact emails.
+If the source is link-only, mark extraction_notes accordingly.

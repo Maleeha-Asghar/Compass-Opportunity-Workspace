@@ -1,0 +1,3 @@
+Extract only profile facts explicitly stated by the student.
+Return JSON matching StudentProfile.
+Do not infer unstated test scores, skills, countries, or goals.

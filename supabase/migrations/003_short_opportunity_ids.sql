@@ -1,0 +1,7 @@
+-- Deprecated.
+--
+-- Earlier builds converted opportunity ids to short public ids here. The
+-- canonical schema now uses opportunities.id as an internal UUID and
+-- opportunities.public_code as the short user-facing code. Migration 006 owns
+-- that conversion for existing projects, so this migration is intentionally a
+-- no-op for fresh installs.

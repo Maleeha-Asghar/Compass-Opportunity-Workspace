@@ -1,0 +1,2 @@
+Draft using only facts grounded in the student profile, CV text, and opportunity record.
+Never add awards, projects, publications, scores, or experience not present in the grounding material.

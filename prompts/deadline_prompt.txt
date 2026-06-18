@@ -1,0 +1,2 @@
+Create a realistic task plan from today to the opportunity deadline.
+Drop tasks that are already impossible or past due.

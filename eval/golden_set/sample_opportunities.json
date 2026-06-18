@@ -1,0 +1,127 @@
+[
+  {
+    "id": "daad-data-science-2027",
+    "source_text": "DAAD scholarship for international Data Science master students in Germany. Fully funded. Deadline 2027-08-15. Required documents: CV, Transcript, Statement of purpose.",
+    "expected": {"title_contains": "DAAD", "country": "Germany", "funding_type": "Fully funded", "deadline": "2027-08-15", "payment_requested": false}
+  },
+  {
+    "id": "paid-processing-warning",
+    "source_text": "Global scholarship assistance. Guaranteed scholarship processing. Application fee required before review. Deadline 2027-10-01.",
+    "expected": {"deadline": "2027-10-01", "payment_requested": true}
+  },
+  {
+    "id": "erasmus-ai-masters",
+    "source_text": "Erasmus Mundus Joint Master in Artificial Intelligence. Scholarship available for partner and programme country students. Deadline 2027-01-12. Countries: Spain, Italy, Netherlands.",
+    "expected": {"title_contains": "Erasmus", "funding_type": "Scholarship", "deadline": "2027-01-12", "payment_requested": false}
+  },
+  {
+    "id": "mitacs-globalink-2027",
+    "source_text": "Mitacs Globalink Research Internship in Canada for undergraduate students. Funding includes stipend and travel support. Deadline 2027-09-18. Required documents: CV, transcript, reference letter.",
+    "expected": {"title_contains": "Mitacs", "country": "Canada", "funding_type": "Stipend", "deadline": "2027-09-18", "payment_requested": false}
+  },
+  {
+    "id": "chevening-uk",
+    "source_text": "Chevening Scholarships enable outstanding emerging leaders to pursue one-year master's degrees in the UK. Fully funded. Applications close 2027-11-04.",
+    "expected": {"title_contains": "Chevening", "country": "UK", "funding_type": "Fully funded", "deadline": "2027-11-04", "payment_requested": false}
+  },
+  {
+    "id": "fulbright-foreign-student",
+    "source_text": "Fulbright Foreign Student Program for graduate study in the United States. Funding covers tuition, living stipend, and health insurance. Deadline 2027-05-15.",
+    "expected": {"title_contains": "Fulbright", "country": "United States", "deadline": "2027-05-15", "payment_requested": false}
+  },
+  {
+    "id": "commonwealth-masters",
+    "source_text": "Commonwealth Master's Scholarships for candidates from eligible low and middle income Commonwealth countries. Fully funded study in the United Kingdom. Deadline 2027-12-10.",
+    "expected": {"title_contains": "Commonwealth", "country": "United Kingdom", "funding_type": "Fully funded", "deadline": "2027-12-10", "payment_requested": false}
+  },
+  {
+    "id": "eth-research-internship",
+    "source_text": "ETH Zurich Computer Science Summer Research Fellowship in Switzerland. Stipend provided. Application deadline 2027-02-28. Required: CV, transcript, motivation letter.",
+    "expected": {"title_contains": "ETH", "country": "Switzerland", "funding_type": "Stipend", "deadline": "2027-02-28", "payment_requested": false}
+  },
+  {
+    "id": "oxford-weidenfeld",
+    "source_text": "Oxford-Weidenfeld and Hoffmann Scholarships and Leadership Programme. Fully funded graduate scholarships at the University of Oxford. Deadline 2027-01-06.",
+    "expected": {"title_contains": "Oxford", "country": "United Kingdom", "funding_type": "Fully funded", "deadline": "2027-01-06", "payment_requested": false}
+  },
+  {
+    "id": "gates-cambridge",
+    "source_text": "Gates Cambridge Scholarship for postgraduate study at the University of Cambridge. Full-cost scholarship. Application deadline 2027-12-03.",
+    "expected": {"title_contains": "Gates Cambridge", "country": "United Kingdom", "deadline": "2027-12-03", "payment_requested": false}
+  },
+  {
+    "id": "epfl-summer-fellowship",
+    "source_text": "EPFL School of Computer and Communication Sciences Summer Research Program in Switzerland. Monthly living allowance provided. Deadline 2027-01-31.",
+    "expected": {"title_contains": "EPFL", "country": "Switzerland", "deadline": "2027-01-31", "payment_requested": false}
+  },
+  {
+    "id": "kaist-graduate-scholarship",
+    "source_text": "KAIST International Graduate Admission scholarship in South Korea. Tuition waiver and monthly stipend available. Deadline 2027-03-24.",
+    "expected": {"title_contains": "KAIST", "country": "South Korea", "funding_type": "Tuition waiver", "deadline": "2027-03-24", "payment_requested": false}
+  },
+  {
+    "id": "japan-mext",
+    "source_text": "MEXT Scholarship for research students in Japan. Fully funded by the Government of Japan. Embassy application deadline 2027-05-20.",
+    "expected": {"title_contains": "MEXT", "country": "Japan", "funding_type": "Fully funded", "deadline": "2027-05-20", "payment_requested": false}
+  },
+  {
+    "id": "australia-awards",
+    "source_text": "Australia Awards Scholarships for full-time undergraduate or postgraduate study in Australia. Fully funded. Applications close 2027-04-30.",
+    "expected": {"title_contains": "Australia Awards", "country": "Australia", "funding_type": "Fully funded", "deadline": "2027-04-30", "payment_requested": false}
+  },
+  {
+    "id": "vanier-canada",
+    "source_text": "Vanier Canada Graduate Scholarships for doctoral students at Canadian institutions. Valued at CAD 50,000 per year. Deadline 2027-11-01.",
+    "expected": {"title_contains": "Vanier", "country": "Canada", "deadline": "2027-11-01", "payment_requested": false}
+  },
+  {
+    "id": "stanford-knight-hennessy",
+    "source_text": "Knight-Hennessy Scholars at Stanford University supports graduate study in the United States. Funding available for up to three years. Deadline 2027-10-09.",
+    "expected": {"title_contains": "Knight-Hennessy", "country": "United States", "deadline": "2027-10-09", "payment_requested": false}
+  },
+  {
+    "id": "rise-germany-internship",
+    "source_text": "RISE Germany offers summer research internships in Germany for undergraduate students in biology, chemistry, physics, earth sciences, engineering, or computer science. Scholarship stipend provided. Deadline 2027-12-15.",
+    "expected": {"title_contains": "RISE", "country": "Germany", "funding_type": "Stipend", "deadline": "2027-12-15", "payment_requested": false}
+  },
+  {
+    "id": "heinrich-boll",
+    "source_text": "Heinrich Boll Foundation scholarships for international students studying in Germany. Funding support available. Application deadline 2027-03-01.",
+    "expected": {"title_contains": "Heinrich", "country": "Germany", "deadline": "2027-03-01", "payment_requested": false}
+  },
+  {
+    "id": "suspicious-whatsapp",
+    "source_text": "Scholarship guaranteed for Europe. Send documents by WhatsApp only and pay processing fee today. Deadline 2027-07-07.",
+    "expected": {"deadline": "2027-07-07", "payment_requested": true}
+  },
+  {
+    "id": "no-deadline-lab-opening",
+    "source_text": "Professor-funded machine learning research assistant position at a university lab. Interested students should email CV and transcript. Deadline will be announced later.",
+    "expected": {"payment_requested": false}
+  },
+  {
+    "id": "italy-dsu",
+    "source_text": "DSU regional scholarship in Italy for international university students. Benefits may include accommodation, meals, and financial support. Deadline 2027-09-06.",
+    "expected": {"country": "Italy", "deadline": "2027-09-06", "payment_requested": false}
+  },
+  {
+    "id": "swedish-institute",
+    "source_text": "Swedish Institute Scholarships for Global Professionals for master's studies in Sweden. Fully funded. Application portal closes 2027-02-26.",
+    "expected": {"title_contains": "Swedish Institute", "country": "Sweden", "funding_type": "Fully funded", "deadline": "2027-02-26", "payment_requested": false}
+  },
+  {
+    "id": "nserc-undergraduate",
+    "source_text": "NSERC Undergraduate Student Research Awards in Canada. Paid research experience for eligible undergraduate students. Deadline 2027-02-10.",
+    "expected": {"title_contains": "NSERC", "country": "Canada", "deadline": "2027-02-10", "payment_requested": false}
+  },
+  {
+    "id": "cern-summer-student",
+    "source_text": "CERN Summer Student Programme in Switzerland for physics, engineering, computer science, or mathematics students. Allowance provided. Deadline 2027-01-30.",
+    "expected": {"title_contains": "CERN", "country": "Switzerland", "deadline": "2027-01-30", "payment_requested": false}
+  },
+  {
+    "id": "ireland-government-postgraduate",
+    "source_text": "Government of Ireland Postgraduate Scholarship Programme. Provides stipend and fee contribution for master's and doctoral research in Ireland. Deadline 2027-10-12.",
+    "expected": {"title_contains": "Government of Ireland", "country": "Ireland", "funding_type": "Stipend", "deadline": "2027-10-12", "payment_requested": false}
+  }
+]
