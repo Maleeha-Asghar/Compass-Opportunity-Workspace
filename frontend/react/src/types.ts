@@ -159,3 +159,12 @@ export type AdminHealth = {
   providers?: Record<string, { calls?: number; failures?: number; avg_latency_ms?: number }>;
   recent_jobs?: Array<{ id: string; status?: string; progress_message?: string; error?: string }>;
 };
+
+export type EvalRunRecord = {
+  id: string;
+  model_name?: string | null;
+  extraction_accuracy?: number | null;
+  hallucination_rate?: number | null;
+  notes?: string | null;
+  created_at?: string | null;
+};

@@ -3,6 +3,7 @@ from contextlib import suppress
 from datetime import date
 import logging
 from io import BytesIO
+from pathlib import Path
 from urllib.parse import quote
 from xml.sax.saxutils import escape
 from zipfile import ZIP_DEFLATED, ZipFile
@@ -547,6 +548,29 @@ def require_admin_user(current_user: CurrentUser = Depends(get_current_user)) ->
 @app.get("/admin/eval-runs")
 def list_eval_runs(limit: int = 50, current_user: CurrentUser = Depends(require_admin_user)) -> dict[str, Any]:
     return {"eval_runs": graph.list_eval_runs(limit=limit)}
+
+
+@app.post("/admin/run-eval")
+def run_eval(current_user: CurrentUser = Depends(require_admin_user)) -> dict[str, Any]:
+    try:
+        from eval.run_eval import run_eval as run_eval_report
+
+        report = run_eval_report(
+            Path("eval/golden_set/sample_opportunities.json"),
+            output_path=Path("eval/latest_eval_report.json"),
+            resume=True,
+        )
+        saved = graph.repository.save_eval_run(
+            {
+                "model_name": "mistral-extraction-eval",
+                "extraction_accuracy": report["extraction_accuracy"],
+                "hallucination_rate": report["hallucination_rate"],
+                "notes": f"{report['case_count']} golden-set cases",
+            }
+        )
+        return {"report": report, "saved_eval_run": saved}
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.get("/admin/source-flags")

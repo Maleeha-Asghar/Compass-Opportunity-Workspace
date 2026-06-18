@@ -1,0 +1,66 @@
+{
+  "case_count": 2,
+  "extraction_accuracy": 1.0,
+  "hallucination_rate": 0.0,
+  "results": [
+    {
+      "id": "daad-data-science-2027",
+      "accuracy": 1.0,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "DAAD Scholarship for International Data Science Master Students",
+        "provider": "DAAD",
+        "country": "Germany",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-08-15",
+        "funding_type": "Fully funded",
+        "eligibility": [],
+        "required_documents": [
+          "CV",
+          "Transcript",
+          "Statement of purpose"
+        ],
+        "application_url": "https://eval.local/daad-data-science-2027",
+        "contact_email": null,
+        "summary": "DAAD scholarship for international students pursuing a master's degree in Data Science in Germany. Fully funded opportunity.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['eligibility', 'application_url', 'contact_email'], 'source': 'Search snippet from eval.local'}"
+        ]
+      }
+    },
+    {
+      "id": "paid-processing-warning",
+      "accuracy": 1.0,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "suspicious",
+      "extracted": {
+        "title": "Global Scholarship Assistance",
+        "provider": null,
+        "country": null,
+        "opportunity_type": "scholarship",
+        "deadline": "2027-10-01",
+        "funding_type": null,
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/paid-processing-warning",
+        "contact_email": null,
+        "summary": "Guaranteed scholarship processing with an application fee required before review.",
+        "payment_requested": true,
+        "warnings": [
+          "Application fee required before review, which may indicate a potential scam.",
+          "Listing appears to request payment; verify carefully before proceeding."
+        ],
+        "extraction_notes": [
+          "Title inferred from content as 'Global Scholarship Assistance'.",
+          "Opportunity type set to 'scholarship' based on context.",
+          "Deadline extracted as '2027-10-01' from source text."
+        ]
+      }
+    }
+  ]
+}

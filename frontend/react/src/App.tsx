@@ -30,6 +30,7 @@ import { FloatingCompassHelp, OnboardingGuide } from "./features/onboarding/User
 import { SearchHistoryPanel } from "./features/search/SearchHistoryPanel";
 import type {
   AdminHealth,
+  EvalRunRecord,
   ApplicationTaskRecord,
   GeneratedDocumentRecord,
   LoadingKey,
@@ -273,6 +274,10 @@ function App() {
   const profileComplete = isProfileComplete(effectiveProfile);
   const hasUploads = workspaceUploads.length > 0;
   const hasOpportunities = workspaceOpportunities.length > 0 || discoveredOpportunities.length > 0;
+  const opportunityOptions = useMemo(
+    () => mergeOpportunityLists(workspaceOpportunities, discoveredOpportunities),
+    [workspaceOpportunities, discoveredOpportunities],
+  );
 
   const notify = (kind: "success" | "error", message: string) => {
     setNotice({ kind, message });
@@ -651,8 +656,8 @@ function App() {
                     setTab={setTab}
                   />
                 )}
-                {tab === "tracker" && <TrackerPanel token={token} setOutput={setOutput} runAction={runAction} loading={loading} setTab={setTab} hasOpportunities={hasOpportunities} tasks={workspaceTasks} refreshWorkspace={loadWorkspaceData} />}
-                {tab === "documents" && <DocumentPanel token={token} profile={profile} setOutput={setOutput} runAction={runAction} loading={loading} />}
+                {tab === "tracker" && <TrackerPanel token={token} setOutput={setOutput} runAction={runAction} loading={loading} setTab={setTab} hasOpportunities={hasOpportunities} tasks={workspaceTasks} refreshWorkspace={loadWorkspaceData} opportunityOptions={opportunityOptions} />}
+                {tab === "documents" && <DocumentPanel token={token} profile={profile} setOutput={setOutput} runAction={runAction} loading={loading} opportunityOptions={opportunityOptions} />}
                 {tab === "uploads" && <UploadPanel token={token} setOutput={setOutput} runAction={runAction} loading={loading} uploads={workspaceUploads} refreshWorkspace={loadWorkspaceData} />}
                 {tab === "notifications" && <NotificationPanel token={token} setOutput={setOutput} runAction={runAction} loading={loading} tasks={workspaceTasks} />}
                 {tab === "admin" && <AdminPanel token={token} setOutput={setOutput} runAction={runAction} loading={loading} />}
@@ -1727,6 +1732,7 @@ function OpportunityPanel({
                     <thead>
                       <tr>
                         <th>Opportunity</th>
+                        <th>ID</th>
                         <th>Country</th>
                         <th>Deadline</th>
                         <th>Funding</th>
@@ -1744,6 +1750,7 @@ function OpportunityPanel({
                             onClick={() => setSelectedKey(key)}
                           >
                             <td><b>{item.title || "Untitled opportunity"}</b></td>
+                            <td className="mono-id">{item.id ?? "—"}</td>
                             <td>{formatDisplayValue(item.country)}</td>
                             <td>{formatOpportunityDeadline(item.deadline)}</td>
                             <td>{formatFundingLabel(item.funding_type)}</td>
@@ -2097,6 +2104,46 @@ function OpportunityDetailPanel({
   );
 }
 
+function OpportunityIdField({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: OpportunityRecord[];
+}) {
+  const savedIds = useMemo(() => {
+    const seen = new Set<string>();
+    const list: string[] = [];
+    for (const item of options) {
+      if (!item.id || seen.has(item.id)) continue;
+      seen.add(item.id);
+      list.push(item.id);
+    }
+    return list;
+  }, [options]);
+
+  return (
+    <label>
+      <span className="atlas-label">{label}</span>
+      <div className="atlas-inline-field">
+        <select className="atlas-input atlas-input-inline" value={value && savedIds.includes(value) ? value : ""} onChange={(event) => onChange(event.target.value || value)}>
+          <option value="">Saved opportunity IDs</option>
+          {savedIds.map((id) => (
+            <option key={id} value={id}>
+              {id}
+            </option>
+          ))}
+        </select>
+        <input className="atlas-input" value={value} maxLength={8} onChange={(event) => onChange(event.target.value)} placeholder="OPP-102" />
+      </div>
+    </label>
+  );
+}
+
 function TrackerPanel({
   token,
   setOutput,
@@ -2106,11 +2153,13 @@ function TrackerPanel({
   hasOpportunities,
   tasks,
   refreshWorkspace,
+  opportunityOptions,
 }: PanelProps & {
   setTab: (tab: Tab) => void;
   hasOpportunities: boolean;
   tasks: ApplicationTaskRecord[];
   refreshWorkspace: () => Promise<void>;
+  opportunityOptions: OpportunityRecord[];
 }) {
   const [text, setText] = useState("");
   const [opportunityId, setOpportunityId] = useState("");
@@ -2169,7 +2218,7 @@ function TrackerPanel({
               <div className="atlas-card-title">Update route</div>
               <div className="atlas-card-subtitle">Update an opportunity without leaving the tracker.</div>
               <div className="atlas-grid2">
-                <label><span className="atlas-label">Opportunity ID</span><input className="atlas-input" value={opportunityId} maxLength={8} onChange={(event) => setOpportunityId(event.target.value)} placeholder="OPP-102" /></label>
+                <OpportunityIdField label="Opportunity ID" value={opportunityId} onChange={setOpportunityId} options={opportunityOptions} />
                 <label><span className="atlas-label">New status</span><select className="atlas-input" value={text} onChange={(event) => setText(event.target.value)}><option value="">Preparing</option><option>Submitted</option><option>Waiting</option><option>Interview</option><option>Result</option></select></label>
               </div>
               <label className="atlas-field-space"><span className="atlas-label">Update note</span><textarea className="atlas-input" value={text} onChange={(event) => setText(event.target.value)} placeholder="Added SOP draft, waiting for transcript upload" /></label>
@@ -2211,7 +2260,7 @@ function TrackerPanel({
   );
 }
 
-function DocumentPanel({ token, profile, setOutput, runAction, loading }: PanelProps & { profile: StudentProfile | null }) {
+function DocumentPanel({ token, profile, setOutput, runAction, loading, opportunityOptions }: PanelProps & { profile: StudentProfile | null; opportunityOptions: OpportunityRecord[] }) {
   const [opportunityId, setOpportunityId] = useState("");
   const [documentType, setDocumentType] = useState("sop");
   const [documentTone, setDocumentTone] = useState("professional");
@@ -2223,6 +2272,7 @@ function DocumentPanel({ token, profile, setOutput, runAction, loading }: PanelP
   const [draftEdits, setDraftEdits] = useState<Record<string, string>>({});
   const [regenerationInstructions, setRegenerationInstructions] = useState<Record<string, string>>({});
   const [selectedDocumentId, setSelectedDocumentId] = useState("");
+  const [draftViewOpen, setDraftViewOpen] = useState(false);
 
   const selectedUpload = uploads.find((upload) => upload.id === selectedUploadId);
   const selectedUploadName = selectedUpload?.original_filename ?? selectedUpload?.path?.split("/").pop() ?? selectedUpload?.id ?? "";
@@ -2235,6 +2285,15 @@ function DocumentPanel({ token, profile, setOutput, runAction, loading }: PanelP
   const documentGroups = useMemo(() => groupDocumentVersions(documents), [documents]);
   const selectedDocument = documents.find((document) => document.id === selectedDocumentId) ?? documentGroups[0]?.versions[0] ?? null;
   const selectedGroup = selectedDocument ? documentGroups.find((group) => group.rootId === documentRootId(selectedDocument)) : null;
+  const draftPreviewText = (selectedDocument ? draftEdits[selectedDocument.id] ?? selectedDocument.content ?? "" : "").trim();
+  const previewLines = useMemo(() => {
+    const lines = draftPreviewText
+      .split(/\r?\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (lines.length) return lines.slice(0, 10);
+    return [];
+  }, [draftPreviewText]);
   const loadUploads = async (silent = false) => {
     const result = await api("/uploads?limit=25", token);
     const rows = (result.uploads ?? []) as UploadedFileRecord[];
@@ -2333,7 +2392,7 @@ function DocumentPanel({ token, profile, setOutput, runAction, loading }: PanelP
             <div className="atlas-card-inner">
               <div className="atlas-card-title">Generate document</div>
               <div className="atlas-card-subtitle">Use profile data, uploaded files, and opportunity details.</div>
-              <label><span className="atlas-label">Opportunity ID</span><input className="atlas-input" value={opportunityId} maxLength={8} onChange={(event) => setOpportunityId(event.target.value)} placeholder="OPP-102" /></label>
+              <OpportunityIdField label="Opportunity ID" value={opportunityId} onChange={setOpportunityId} options={opportunityOptions} />
               <div className="atlas-grid2 atlas-field-space">
                 <label><span className="atlas-label">Document type</span><select className="atlas-input" value={documentType} onChange={(event) => setDocumentType(event.target.value)}>
                 <option value="sop">Statement of Purpose</option>
@@ -2376,23 +2435,48 @@ function DocumentPanel({ token, profile, setOutput, runAction, loading }: PanelP
             </div>
         </div>
 
-          <div className="atlas-card">
+          <motion.button
+            className="atlas-card draft-preview-card"
+            type="button"
+            layoutId="draft-preview-card"
+            onClick={() => selectedDocument && setDraftViewOpen(true)}
+            disabled={!selectedDocument}
+            whileHover={{ scale: selectedDocument ? 1.01 : 1 }}
+            whileTap={{ scale: selectedDocument ? 0.99 : 1 }}
+          >
             <div className="atlas-card-inner">
               <div className="atlas-card-title">Draft preview</div>
-              <div className="atlas-card-subtitle">Edit the text manually or rewrite it with AI before saving or downloading.</div>
+              <div className="atlas-card-subtitle">Preview the generated draft here.</div>
               <div className="doc-stage">
                 <div className="paper">
                   <h3>{documentType === "sop" ? "SOP Draft" : documentType === "cv_review" ? "CV Review" : documentType === "recommendation_letter" ? "Recommendation" : "Draft"}</h3>
-                  <div className="paper-line" />
-                  <div className="paper-line" style={{ "--w": "78%" } as React.CSSProperties} />
-                  <div className="paper-line" style={{ "--w": "92%" } as React.CSSProperties} />
-                  <div className="paper-line" style={{ "--w": "65%" } as React.CSSProperties} />
-                  <div className="paper-line" style={{ "--w": "88%" } as React.CSSProperties} />
-                  <div className="paper-line" style={{ "--w": "58%" } as React.CSSProperties} />
+                  <AnimatePresence mode="wait" initial={false}>
+                    <motion.div
+                      key={selectedDocument?.id || documentType}
+                      className="paper-content"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.28, ease: "easeOut" }}
+                    >
+                      {previewLines.map((line, index) => (
+                        <motion.p
+                          className={`paper-line-text ${index === 0 ? "lead" : ""}`}
+                          key={`${selectedDocument?.id || documentType}-${index}-${line.slice(0, 24)}`}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.24, delay: index * 0.05 }}
+                        >
+                          {line}
+                        </motion.p>
+                      ))}
+                    </motion.div>
+                  </AnimatePresence>
+                  <div className="paper-footer-hint">Click to view/edit</div>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.button>
 
           <div className="atlas-card">
             <div className="atlas-card-inner">
@@ -2406,92 +2490,103 @@ function DocumentPanel({ token, profile, setOutput, runAction, loading }: PanelP
             </div>
           </div>
         </div>
-      {documents.length > 0 && selectedDocument && (
-        <div className="document-review-layout">
-          <aside className="version-history">
-            <PanelHeader title="Version history" meta={`${documents.length} saved draft${documents.length === 1 ? "" : "s"}`} />
-            {documentGroups.map((group) => (
-              <section key={group.rootId}>
-                <strong>{formatDisplayValue(group.versions[0]?.document_type)}</strong>
-                {group.versions.map((document) => (
-                  <button
-                    key={document.id}
-                    className={document.id === selectedDocument.id ? "active" : ""}
-                    onClick={() => setSelectedDocumentId(document.id)}
-                  >
-                    <span>Version {document.version_number ?? 1}</span>
-                    <small>{document.updated_at || document.created_at ? formatDeadline(document.updated_at ?? document.created_at) : "Saved draft"}</small>
-                  </button>
+      <AnimatePresence mode="wait" initial={false}>
+        {draftViewOpen && documents.length > 0 && selectedDocument && (
+          <motion.div
+            className="document-review-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setDraftViewOpen(false)}
+          >
+            <motion.div
+              className="document-review-layout"
+              layoutId="draft-preview-card"
+              transition={{ type: "spring", stiffness: 120, damping: 18 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <aside className="version-history">
+                <PanelHeader title="Version history" meta={`${documents.length} saved draft${documents.length === 1 ? "" : "s"}`} />
+                {documentGroups.map((group) => (
+                  <section key={group.rootId}>
+                    <strong>{formatDisplayValue(group.versions[0]?.document_type)}</strong>
+                    {group.versions.map((document) => (
+                      <button
+                        key={document.id}
+                        className={document.id === selectedDocument.id ? "active" : ""}
+                        onClick={() => setSelectedDocumentId(document.id)}
+                      >
+                        <span>Version {document.version_number ?? 1}</span>
+                        <small>{document.updated_at || document.created_at ? formatDeadline(document.updated_at ?? document.created_at) : "Saved draft"}</small>
+                      </button>
+                    ))}
+                  </section>
                 ))}
-              </section>
-            ))}
-          </aside>
+              </aside>
 
-          <article className="document-card focused">
-            <div>
-              <div>
-                <strong>{formatDisplayValue(selectedDocument.document_type)}</strong>
-                <small>
-                  Version {selectedDocument.version_number ?? 1}
-                  {selectedGroup ? ` of ${selectedGroup.versions.length}` : ""}
-                </small>
-              </div>
-              <div className="button-row compact">
-                <button onClick={() => saveEditedDocument(selectedDocument)} disabled={loading.documents}>Save manual edits</button>
-                <button
-                  onClick={() => generate(selectedDocument)}
-                  disabled={!opportunityId || loading.documents}
-                  title="Use the current draft and regeneration note to create a new AI-written version"
-                >
-                  {loading.documents ? <Spinner /> : <FileText size={16} />} Rewrite with AI
-                </button>
-                <button onClick={() => navigator.clipboard.writeText(draftEdits[selectedDocument.id] ?? selectedDocument.content ?? "")}>Copy</button>
-                <button onClick={() => downloadDocument(selectedDocument)}>Download txt</button>
-                <button onClick={() => downloadDocumentFile(selectedDocument, "docx")}>Download docx</button>
-              </div>
-            </div>
+              <article className="document-card focused">
+                <div className="document-card-topline">
+                  <div>
+                    <strong>{formatDisplayValue(selectedDocument.document_type)}</strong>
+                    <small>
+                      Version {selectedDocument.version_number ?? 1}
+                      {selectedGroup ? ` of ${selectedGroup.versions.length}` : ""}
+                    </small>
+                  </div>
+                  <div className="button-row compact">
+                    <button onClick={() => setDraftViewOpen(false)}>Back</button>
+                    <button onClick={() => saveEditedDocument(selectedDocument)} disabled={loading.documents}>Save</button>
+                    <button onClick={() => downloadDocument(selectedDocument)}>Download txt</button>
+                    <button onClick={() => downloadDocumentFile(selectedDocument, "docx")}>Download docx</button>
+                  </div>
+                </div>
 
-            {selectedDocument.regeneration_instruction && (
-              <div className="review-note">
-                <strong>Previous instruction</strong>
-                <span>{selectedDocument.regeneration_instruction}</span>
-              </div>
-            )}
+                <div className="nested-draft-shell">
+                  <textarea
+                    className="document-editor nested"
+                    value={draftEdits[selectedDocument.id] ?? selectedDocument.content ?? ""}
+                    onChange={(event) => setDraftEdits((current) => ({ ...current, [selectedDocument.id]: event.target.value }))}
+                  />
 
-            <textarea
-              className="document-editor"
-              value={draftEdits[selectedDocument.id] ?? selectedDocument.content ?? ""}
-              onChange={(event) => setDraftEdits((current) => ({ ...current, [selectedDocument.id]: event.target.value }))}
-            />
+                  {selectedDocument.regeneration_instruction && (
+                    <div className="review-note">
+                      <strong>Previous instruction</strong>
+                      <span>{selectedDocument.regeneration_instruction}</span>
+                    </div>
+                  )}
 
-            {selectedDocument.grounding_flags?.length ? (
-              <div className="review-flags">
-                <strong>Grounding review</strong>
-                {selectedDocument.grounding_flags.map((flag) => <span key={flag}>{flag}</span>)}
-              </div>
-            ) : (
-              <div className="review-ok">
-                <CheckCircle2 size={17} />
-                <span>Grounding check did not return unsupported-claim flags.</span>
-              </div>
-            )}
+                  {selectedDocument.grounding_flags?.length ? (
+                    <div className="review-flags">
+                      <strong>Grounding review</strong>
+                      {selectedDocument.grounding_flags.map((flag) => <span key={flag}>{flag}</span>)}
+                    </div>
+                  ) : (
+                    <div className="review-ok">
+                      <CheckCircle2 size={17} />
+                      <span>Grounding check did not return unsupported-claim flags.</span>
+                    </div>
+                  )}
 
-            <label>
-              AI rewrite instruction
-              <input
-                value={regenerationInstructions[selectedDocument.id] ?? ""}
-                onChange={(event) => setRegenerationInstructions((current) => ({ ...current, [selectedDocument.id]: event.target.value }))}
-                placeholder="e.g. make it more concise and emphasize research experience"
-              />
-            </label>
-            <div className="button-row">
-              <button onClick={() => generate(selectedDocument)} disabled={!opportunityId || loading.documents}>
-                {loading.documents ? <Spinner /> : <FileText size={16} />} Rewrite as new version
-              </button>
-            </div>
-          </article>
-        </div>
-      )}
+                  <label>
+                    AI rewrite instruction
+                    <input
+                      value={regenerationInstructions[selectedDocument.id] ?? ""}
+                      onChange={(event) => setRegenerationInstructions((current) => ({ ...current, [selectedDocument.id]: event.target.value }))}
+                      placeholder="e.g. make it more concise and emphasize research experience"
+                    />
+                  </label>
+                  <div className="button-row">
+                    <button onClick={() => generate(selectedDocument)} disabled={!opportunityId || loading.documents}>
+                      {loading.documents ? <Spinner /> : <FileText size={16} />} Rewrite as new version
+                    </button>
+                  </div>
+                </div>
+              </article>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       </div>
     </div>
   );
@@ -2718,11 +2813,18 @@ function NotificationPanel({
 
 function AdminPanel({ token, setOutput, runAction, loading }: PanelProps) {
   const [health, setHealth] = useState<AdminHealth | null>(null);
+  const [evalRuns, setEvalRuns] = useState<EvalRunRecord[]>([]);
   const loadHealth = async () => runAction("admin", "Loading system health...", async () => {
     const result = await api<{ health: AdminHealth }>("/admin/health", token);
     setHealth(result.health);
     setOutput(result);
   }, "Health console loaded successfully.");
+  const loadEvalRuns = async () => runAction("admin", "Loading eval runs...", async () => {
+    const result = await api<{ eval_runs?: EvalRunRecord[] }>("/admin/eval-runs", token);
+    setEvalRuns((result.eval_runs ?? []) as EvalRunRecord[]);
+    setOutput(result);
+  }, "Eval runs loaded successfully.");
+  const latestEvalRun = evalRuns[0] ?? null;
 
   return (
     <div className="panel-stack">
@@ -2754,9 +2856,35 @@ function AdminPanel({ token, setOutput, runAction, loading }: PanelProps) {
         ) : null}
       </div>
       <div className="panel">
+        <PanelHeader title="Eval report" meta="Latest saved extraction run" action={<button onClick={loadEvalRuns} disabled={loading.admin}>{loading.admin ? <Spinner /> : <FileText size={16} />} Refresh</button>} />
+        {latestEvalRun ? (
+          <div className="health-grid">
+            <div className="metric-card">
+              <span>Model</span>
+              <strong>{latestEvalRun.model_name ?? "Unknown"}</strong>
+              <small>{latestEvalRun.created_at ? new Date(latestEvalRun.created_at).toLocaleString() : "Recent"}</small>
+            </div>
+            <div className="metric-card">
+              <span>Extraction accuracy</span>
+              <strong>{latestEvalRun.extraction_accuracy != null ? `${Math.round(latestEvalRun.extraction_accuracy * 1000) / 10}%` : "N/A"}</strong>
+              <small>Golden-set average</small>
+            </div>
+            <div className="metric-card">
+              <span>Hallucination rate</span>
+              <strong>{latestEvalRun.hallucination_rate != null ? `${Math.round(latestEvalRun.hallucination_rate * 1000) / 10}%` : "N/A"}</strong>
+              <small>Cases with unsupported fields</small>
+            </div>
+          </div>
+        ) : (
+          <p className="muted-text">Run evals to generate and save the latest report here.</p>
+        )}
+        {latestEvalRun?.notes && <p className="muted-text">{latestEvalRun.notes}</p>}
+      </div>
+      <div className="panel">
         <PanelHeader title="Review tools" meta="Evaluation and source trust inspection" />
         <div className="admin-actions">
-          <button onClick={async () => runAction("admin", "Loading eval runs...", async () => setOutput(await api("/admin/eval-runs", token)), "Eval runs loaded successfully.")} disabled={loading.admin}><FileText size={16} /> Eval runs</button>
+          <button onClick={async () => runAction("admin", "Running eval suite and saving the summary...", async () => setOutput(await api("/admin/run-eval", token, { method: "POST", body: "{}" })), "Eval suite completed and saved successfully.")} disabled={loading.admin}><Activity size={16} /> Run evals</button>
+          <button onClick={loadEvalRuns} disabled={loading.admin}><FileText size={16} /> Eval runs</button>
           <button onClick={async () => runAction("admin", "Loading source flags...", async () => setOutput(await api("/admin/source-flags", token)), "Source flags loaded successfully.")} disabled={loading.admin}><ShieldAlert size={16} /> Source flags</button>
           <button onClick={async () => runAction("admin", "Checking OCR status...", async () => setOutput(await api("/health/ocr", token)), "OCR status checked successfully.")} disabled={loading.admin}><Settings size={16} /> OCR health</button>
         </div>

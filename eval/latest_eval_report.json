@@ -1,0 +1,693 @@
+{
+  "case_count": 25,
+  "extraction_accuracy": 0.9420000000000001,
+  "hallucination_rate": 0.4,
+  "results": [
+    {
+      "id": "daad-data-science-2027",
+      "accuracy": 1.0,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "DAAD Scholarship for International Data Science Master Students",
+        "provider": "DAAD",
+        "country": "Germany",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-08-15",
+        "funding_type": "Fully funded",
+        "eligibility": [],
+        "required_documents": [
+          "CV",
+          "Transcript",
+          "Statement of purpose"
+        ],
+        "application_url": "https://eval.local/daad-data-science-2027",
+        "contact_email": null,
+        "summary": "DAAD scholarship for international students pursuing a master's degree in Data Science in Germany. Fully funded opportunity.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['eligibility', 'application_url', 'contact_email'], 'source_limited': True}"
+        ]
+      }
+    },
+    {
+      "id": "paid-processing-warning",
+      "accuracy": 1.0,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "suspicious",
+      "extracted": {
+        "title": "Global Scholarship Assistance",
+        "provider": null,
+        "country": null,
+        "opportunity_type": "scholarship",
+        "deadline": "2027-10-01",
+        "funding_type": null,
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/paid-processing-warning",
+        "contact_email": null,
+        "summary": "Guaranteed scholarship processing with an application fee required before review.",
+        "payment_requested": true,
+        "warnings": [
+          "Application fee required before review, which may indicate a potential scam.",
+          "Listing appears to request payment; verify carefully before proceeding."
+        ],
+        "extraction_notes": [
+          "Title inferred from content as 'Global Scholarship Assistance'.",
+          "Opportunity type set to 'scholarship' based on context.",
+          "Payment requested flagged as true due to application fee requirement."
+        ]
+      }
+    },
+    {
+      "id": "erasmus-ai-masters",
+      "accuracy": 1.0,
+      "hallucination_count": 1,
+      "hallucination_flags": [
+        "country"
+      ],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "Erasmus Mundus Joint Master in Artificial Intelligence",
+        "provider": "Erasmus Mundus",
+        "country": [
+          "Spain",
+          "Italy",
+          "Netherlands"
+        ],
+        "opportunity_type": "Master's Program",
+        "deadline": "2027-01-12",
+        "funding_type": "Scholarship",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/erasmus-ai-masters",
+        "contact_email": null,
+        "summary": "Erasmus Mundus Joint Master in Artificial Intelligence with scholarships available for partner and programme country students.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['eligibility', 'required_documents'], 'source_limited': True}"
+        ]
+      }
+    },
+    {
+      "id": "mitacs-globalink-2027",
+      "accuracy": 0.8,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "Mitacs Globalink Research Internship",
+        "provider": "Mitacs",
+        "country": "Canada",
+        "opportunity_type": "Internship",
+        "deadline": "2027-09-18",
+        "funding_type": "Stipend and travel support",
+        "eligibility": [
+          "Undergraduate students"
+        ],
+        "required_documents": [
+          "CV",
+          "Transcript",
+          "Reference letter"
+        ],
+        "application_url": "https://eval.local/mitacs-globalink-2027",
+        "contact_email": null,
+        "summary": "Mitacs Globalink Research Internship in Canada for undergraduate students, offering funding that includes a stipend and travel support.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': {'provider': \"Assumed from program name 'Mitacs Globalink'\", 'eligibility': \"Explicitly stated as 'undergraduate students'\", 'funding_type': \"Explicitly stated as 'stipend and travel support'\"}, 'missing_information': ['Application URL', 'Contact email', 'Detailed eligibility criteria beyond student level', 'Specific stipend amount or travel support details']}"
+        ]
+      }
+    },
+    {
+      "id": "chevening-uk",
+      "accuracy": 0.8,
+      "hallucination_count": 1,
+      "hallucination_flags": [
+        "country"
+      ],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "Chevening Scholarships",
+        "provider": "Chevening",
+        "country": "United Kingdom",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-11-04",
+        "funding_type": "Fully funded",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/chevening-uk",
+        "contact_email": null,
+        "summary": "Chevening Scholarships enable outstanding emerging leaders to pursue one-year master's degrees in the UK.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['country', 'opportunity_type'], 'missing_fields': ['eligibility', 'required_documents', 'application_url', 'contact_email']}"
+        ]
+      }
+    },
+    {
+      "id": "fulbright-foreign-student",
+      "accuracy": 1.0,
+      "hallucination_count": 1,
+      "hallucination_flags": [
+        "funding_type"
+      ],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "Fulbright Foreign Student Program",
+        "provider": "Fulbright Program",
+        "country": "United States",
+        "opportunity_type": "Graduate Study",
+        "deadline": "2027-05-15",
+        "funding_type": "Full funding (tuition, living stipend, health insurance)",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/fulbright-foreign-student",
+        "contact_email": null,
+        "summary": "The Fulbright Foreign Student Program enables graduate students to study in the United States with funding covering tuition, a living stipend, and health insurance.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['provider', 'country', 'summary'], 'missing_fields': ['eligibility', 'required_documents', 'application_url', 'contact_email']}"
+        ]
+      }
+    },
+    {
+      "id": "commonwealth-masters",
+      "accuracy": 1.0,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "Commonwealth Master's Scholarships",
+        "provider": "Commonwealth Scholarship Commission in the UK",
+        "country": "United Kingdom",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-12-10",
+        "funding_type": "Fully funded",
+        "eligibility": [
+          "Candidates from eligible low and middle income Commonwealth countries"
+        ],
+        "required_documents": [],
+        "application_url": "https://eval.local/commonwealth-masters",
+        "contact_email": null,
+        "summary": "Commonwealth Master's Scholarships for candidates from eligible low and middle income Commonwealth countries to pursue fully funded study in the United Kingdom.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'provider_inferred': True, 'eligibility_inferred_from_snippet': True}"
+        ]
+      }
+    },
+    {
+      "id": "eth-research-internship",
+      "accuracy": 1.0,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "ETH Zurich Computer Science Summer Research Fellowship",
+        "provider": "ETH Zurich",
+        "country": "Switzerland",
+        "opportunity_type": "Internship",
+        "deadline": "2027-02-28",
+        "funding_type": "Stipend",
+        "eligibility": [],
+        "required_documents": [
+          "CV",
+          "Transcript",
+          "Motivation letter"
+        ],
+        "application_url": "https://eval.local/eth-research-internship",
+        "contact_email": null,
+        "summary": "ETH Zurich offers a summer research fellowship in computer science for students, providing a stipend.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'source': 'html snippet', 'confidence': 'high', 'missing_fields': ['eligibility', 'application_url', 'contact_email']}"
+        ]
+      }
+    },
+    {
+      "id": "oxford-weidenfeld",
+      "accuracy": 1.0,
+      "hallucination_count": 1,
+      "hallucination_flags": [
+        "country"
+      ],
+      "trust_level": "suspicious",
+      "extracted": {
+        "title": "Oxford-Weidenfeld and Hoffmann Scholarships and Leadership Programme",
+        "provider": "University of Oxford",
+        "country": "United Kingdom",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-01-06",
+        "funding_type": "Fully funded",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/oxford-weidenfeld",
+        "contact_email": null,
+        "summary": "Fully funded graduate scholarships at the University of Oxford under the Oxford-Weidenfeld and Hoffmann Scholarships and Leadership Programme.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': {'country': \"Assumed based on University of Oxford's location\", 'opportunity_type': \"Inferred from 'graduate scholarships'\", 'funding_type': \"Explicitly stated as 'fully funded'\"}, 'missing_data': ['eligibility criteria', 'required documents', 'application URL', 'contact email']}"
+        ]
+      }
+    },
+    {
+      "id": "gates-cambridge",
+      "accuracy": 1.0,
+      "hallucination_count": 1,
+      "hallucination_flags": [
+        "country"
+      ],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "Gates Cambridge Scholarship",
+        "provider": "Gates Cambridge",
+        "country": "United Kingdom",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-12-03",
+        "funding_type": "Full-cost scholarship",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/gates-cambridge",
+        "contact_email": null,
+        "summary": "Gates Cambridge Scholarship for postgraduate study at the University of Cambridge.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': {'country': 'Based on University of Cambridge location', 'opportunity_type': \"Inferred from 'Scholarship' in title\"}}"
+        ]
+      }
+    },
+    {
+      "id": "epfl-summer-fellowship",
+      "accuracy": 1.0,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "EPFL School of Computer and Communication Sciences Summer Research Program",
+        "provider": "EPFL (\u00c9cole Polytechnique F\u00e9d\u00e9rale de Lausanne)",
+        "country": "Switzerland",
+        "opportunity_type": "Summer Fellowship",
+        "deadline": "2027-01-31",
+        "funding_type": "Monthly living allowance",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/epfl-summer-fellowship",
+        "contact_email": null,
+        "summary": "EPFL offers a Summer Research Program in the fields of Computer and Communication Sciences, providing participants with a monthly living allowance.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['provider', 'summary'], 'missing_fields': ['eligibility', 'required_documents', 'application_url', 'contact_email']}"
+        ]
+      }
+    },
+    {
+      "id": "kaist-graduate-scholarship",
+      "accuracy": 0.8,
+      "hallucination_count": 1,
+      "hallucination_flags": [
+        "funding_type"
+      ],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "KAIST International Graduate Admission Scholarship",
+        "provider": "KAIST",
+        "country": "South Korea",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-03-24",
+        "funding_type": "Partial Funding",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/kaist-graduate-scholarship",
+        "contact_email": null,
+        "summary": "KAIST offers an International Graduate Admission Scholarship in South Korea, providing a tuition waiver and monthly stipend for graduate students.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['funding_type', 'summary'], 'missing_fields': ['eligibility', 'required_documents', 'application_url', 'contact_email']}"
+        ]
+      }
+    },
+    {
+      "id": "japan-mext",
+      "accuracy": 1.0,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "MEXT Scholarship for Research Students",
+        "provider": "Government of Japan (Ministry of Education, Culture, Sports, Science and Technology - MEXT)",
+        "country": "Japan",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-05-20",
+        "funding_type": "Fully funded",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/japan-mext",
+        "contact_email": null,
+        "summary": "The MEXT Scholarship offers fully funded opportunities for research students to study in Japan, provided by the Government of Japan.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['provider', 'summary'], 'missing_information': ['eligibility', 'required_documents', 'contact_email']}"
+        ]
+      }
+    },
+    {
+      "id": "australia-awards",
+      "accuracy": 1.0,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "Australia Awards Scholarships",
+        "provider": "Australia Awards",
+        "country": "Australia",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-04-30",
+        "funding_type": "Fully funded",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/australia-awards",
+        "contact_email": null,
+        "summary": "Australia Awards Scholarships for full-time undergraduate or postgraduate study in Australia.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['opportunity_type', 'funding_type'], 'missing_fields': ['eligibility', 'required_documents', 'contact_email']}"
+        ]
+      }
+    },
+    {
+      "id": "vanier-canada",
+      "accuracy": 0.75,
+      "hallucination_count": 1,
+      "hallucination_flags": [
+        "funding_type"
+      ],
+      "trust_level": "suspicious",
+      "extracted": {
+        "title": "Vanier Canada Graduate Scholarships",
+        "provider": "Government of Canada",
+        "country": "Canada",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-11-01",
+        "funding_type": "Full funding",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/vanier-canada",
+        "contact_email": null,
+        "summary": "Vanier Canada Graduate Scholarships for doctoral students at Canadian institutions, valued at CAD 50,000 per year.",
+        "payment_requested": true,
+        "warnings": [
+          "Listing appears to request payment; verify carefully before proceeding."
+        ],
+        "extraction_notes": [
+          "{'details_inferred': ['provider', 'funding_type', 'payment_requested'], 'missing_fields': ['eligibility', 'required_documents', 'application_url', 'contact_email']}"
+        ]
+      }
+    },
+    {
+      "id": "stanford-knight-hennessy",
+      "accuracy": 1.0,
+      "hallucination_count": 1,
+      "hallucination_flags": [
+        "funding_type"
+      ],
+      "trust_level": "suspicious",
+      "extracted": {
+        "title": "Knight-Hennessy Scholars Program",
+        "provider": "Stanford University",
+        "country": "United States",
+        "opportunity_type": "Graduate Scholarship",
+        "deadline": "2027-10-09",
+        "funding_type": "Full funding",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/stanford-knight-hennessy",
+        "contact_email": null,
+        "summary": "The Knight-Hennessy Scholars program at Stanford University supports graduate study in the United States with funding available for up to three years.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['funding_type'], 'missing_fields': ['eligibility', 'required_documents', 'application_url', 'contact_email']}"
+        ]
+      }
+    },
+    {
+      "id": "rise-germany-internship",
+      "accuracy": 0.8,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "RISE Germany Summer Research Internships",
+        "provider": "RISE Germany",
+        "country": "Germany",
+        "opportunity_type": "Internship",
+        "deadline": "2027-12-15",
+        "funding_type": "Scholarship stipend",
+        "eligibility": [
+          "Undergraduate students in biology, chemistry, physics, earth sciences, engineering, or computer science"
+        ],
+        "required_documents": [],
+        "application_url": "https://eval.local/rise-germany-internship",
+        "contact_email": null,
+        "summary": "RISE Germany offers summer research internships in Germany for undergraduate students in STEM fields, including biology, chemistry, physics, earth sciences, engineering, or computer science. A scholarship stipend is provided.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': {'opportunity_type': \"Assumed 'Internship' based on title and context\", 'funding_type': \"Assumed 'Scholarship stipend' refers to partial or full funding\"}, 'missing_fields': ['required_documents', 'contact_email']}"
+        ]
+      }
+    },
+    {
+      "id": "heinrich-boll",
+      "accuracy": 1.0,
+      "hallucination_count": 1,
+      "hallucination_flags": [
+        "funding_type"
+      ],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "Heinrich B\u00f6ll Foundation Scholarships for International Students",
+        "provider": "Heinrich B\u00f6ll Foundation",
+        "country": "Germany",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-03-01",
+        "funding_type": "Partial or Full Funding",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/heinrich-boll",
+        "contact_email": null,
+        "summary": "The Heinrich B\u00f6ll Foundation offers scholarships for international students studying in Germany, providing funding support.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "Details such as eligibility criteria, required documents, and application URL are not provided in the source text."
+        ]
+      }
+    },
+    {
+      "id": "suspicious-whatsapp",
+      "accuracy": 1.0,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "suspicious",
+      "extracted": {
+        "title": "Suspicious WhatsApp Scholarship Offer",
+        "provider": null,
+        "country": "Europe",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-07-07",
+        "funding_type": null,
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/suspicious-whatsapp",
+        "contact_email": null,
+        "summary": "A scholarship opportunity advertised for Europe, requiring document submission via WhatsApp only and payment of a processing fee.",
+        "payment_requested": true,
+        "warnings": [
+          "Requests payment of a processing fee, which is uncommon for legitimate scholarships.",
+          "Requires document submission via WhatsApp only, which is unusual and may pose privacy risks.",
+          "Lacks verifiable details about the provider or official application channels.",
+          "Listing appears to request payment; verify carefully before proceeding."
+        ],
+        "extraction_notes": [
+          "Details are minimal and raise red flags typical of scams. No official provider or application URL is provided."
+        ]
+      }
+    },
+    {
+      "id": "no-deadline-lab-opening",
+      "accuracy": 1.0,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "Machine Learning Research Assistant Position",
+        "provider": null,
+        "country": null,
+        "opportunity_type": "Research Assistant Position",
+        "deadline": null,
+        "funding_type": null,
+        "eligibility": [],
+        "required_documents": [
+          "CV",
+          "Transcript"
+        ],
+        "application_url": "https://eval.local/no-deadline-lab-opening",
+        "contact_email": null,
+        "summary": "Professor-funded machine learning research assistant position at a university lab. Interested students should email CV and transcript.",
+        "payment_requested": false,
+        "warnings": [
+          "Deadline not yet announced."
+        ],
+        "extraction_notes": [
+          "Details about provider, country, funding type, eligibility, and contact email are missing from the source text."
+        ]
+      }
+    },
+    {
+      "id": "italy-dsu",
+      "accuracy": 1.0,
+      "hallucination_count": 1,
+      "hallucination_flags": [
+        "funding_type"
+      ],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "DSU Regional Scholarship",
+        "provider": "DSU (Regional Agency for the Right to University Study)",
+        "country": "Italy",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-09-06",
+        "funding_type": "Partial funding",
+        "eligibility": [
+          "International university students"
+        ],
+        "required_documents": [],
+        "application_url": "https://eval.local/italy-dsu",
+        "contact_email": null,
+        "summary": "DSU regional scholarship in Italy for international university students. Benefits may include accommodation, meals, and financial support.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['provider', 'funding_type'], 'missing_fields': ['required_documents', 'contact_email']}"
+        ]
+      }
+    },
+    {
+      "id": "swedish-institute",
+      "accuracy": 0.8,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "Swedish Institute Scholarships for Global Professionals",
+        "provider": "Swedish Institute",
+        "country": "Sweden",
+        "opportunity_type": "scholarship",
+        "deadline": "2027-02-26",
+        "funding_type": "fully funded",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/swedish-institute",
+        "contact_email": null,
+        "summary": "The Swedish Institute offers fully funded scholarships for global professionals pursuing master's studies in Sweden.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['country', 'opportunity_type', 'summary'], 'missing_fields': ['eligibility', 'required_documents', 'application_url', 'contact_email']}"
+        ]
+      }
+    },
+    {
+      "id": "nserc-undergraduate",
+      "accuracy": 1.0,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "NSERC Undergraduate Student Research Awards",
+        "provider": "NSERC",
+        "country": "Canada",
+        "opportunity_type": "Research Award",
+        "deadline": "2027-02-10",
+        "funding_type": "Paid research experience",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/nserc-undergraduate",
+        "contact_email": null,
+        "summary": "Paid research experience for eligible undergraduate students in Canada.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['provider', 'country', 'opportunity_type', 'funding_type'], 'missing_fields': ['eligibility', 'required_documents', 'application_url', 'contact_email', 'payment_requested']}"
+        ]
+      }
+    },
+    {
+      "id": "cern-summer-student",
+      "accuracy": 1.0,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "CERN Summer Student Programme",
+        "provider": "CERN",
+        "country": "Switzerland",
+        "opportunity_type": "Summer Programme",
+        "deadline": "2027-01-30",
+        "funding_type": "Allowance",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/cern-summer-student",
+        "contact_email": null,
+        "summary": "The CERN Summer Student Programme in Switzerland is open to students in physics, engineering, computer science, or mathematics. An allowance is provided to participants.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['eligibility', 'required_documents', 'application_url', 'contact_email'], 'source_limitation': 'Information extracted from a brief snippet; full details may require visiting the source URL.'}"
+        ]
+      }
+    },
+    {
+      "id": "ireland-government-postgraduate",
+      "accuracy": 0.8,
+      "hallucination_count": 0,
+      "hallucination_flags": [],
+      "trust_level": "needs_review",
+      "extracted": {
+        "title": "Government of Ireland Postgraduate Scholarship Programme",
+        "provider": "Government of Ireland",
+        "country": "Ireland",
+        "opportunity_type": "Scholarship",
+        "deadline": "2027-10-12",
+        "funding_type": "Stipend and fee contribution",
+        "eligibility": [],
+        "required_documents": [],
+        "application_url": "https://eval.local/ireland-government-postgraduate",
+        "contact_email": null,
+        "summary": "Provides stipend and fee contribution for master's and doctoral research in Ireland.",
+        "payment_requested": false,
+        "warnings": [],
+        "extraction_notes": [
+          "{'details_inferred': ['opportunity_type', 'funding_type'], 'missing_fields': ['eligibility', 'required_documents', 'application_url', 'contact_email']}"
+        ]
+      }
+    }
+  ]
+}

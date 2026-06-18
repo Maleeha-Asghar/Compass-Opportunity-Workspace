@@ -2991,6 +2991,103 @@ textarea.atlas-input {
   font-weight: 650;
 }
 
+.paper-content {
+  display: grid;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.paper-line-text {
+  margin: 0;
+  font-family: "Georgia", "Times New Roman", serif;
+  font-size: 11.5px;
+  line-height: 1.62;
+  color: rgba(14, 16, 32, 0.84);
+  text-wrap: pretty;
+}
+
+.paper-line-text.lead {
+  font-size: 12px;
+  color: rgba(14, 16, 32, 0.96);
+}
+
+.preview-open-button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  width: 100%;
+  cursor: pointer;
+}
+
+.preview-open-button:disabled {
+  cursor: default;
+}
+
+.preview-open-button .paper {
+  margin: 0 auto;
+}
+
+.paper-footer-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  text-align: center;
+  font-size: 11px;
+  color: rgba(14, 16, 32, 0.48);
+  letter-spacing: 0.2px;
+}
+
+.draft-preview-card {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.draft-preview-card:disabled {
+  cursor: default;
+}
+
+.document-review-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  padding: 32px;
+  background: rgba(4, 7, 16, 0.72);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  overflow: auto;
+}
+
+.document-review-layout {
+  width: min(1440px, 100%);
+  min-height: calc(100vh - 64px);
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.nested-draft-shell {
+  display: grid;
+  gap: 16px;
+  padding-top: 4px;
+}
+
+.document-editor.nested {
+  min-height: 460px;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
 .paper-line {
   height: 7px;
   border-radius: 9px;
@@ -3134,6 +3231,23 @@ textarea.atlas-input {
 .atlas-table td {
   padding: 12px 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.052);
+}
+
+.atlas-inline-field {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.85fr) minmax(0, 1.15fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.atlas-input-inline {
+  min-width: 0;
+}
+
+.atlas-table th:nth-child(2),
+.atlas-table td:nth-child(2) {
+  white-space: nowrap;
+  width: 1%;
 }
 
 .atlas-table tr {
