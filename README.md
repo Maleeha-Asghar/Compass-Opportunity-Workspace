@@ -145,9 +145,3 @@ Run:
 ```bash
 python -m scripts.e2e_smoke
 ```
-
-## More Docs
-
-- `docs/deployment.md`
-- `docs/scheduling.md`
-- `docs/screenshots.md`
