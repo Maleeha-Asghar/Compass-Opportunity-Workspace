@@ -14,6 +14,7 @@ type UserGuideProps = {
   profileComplete: boolean;
   hasUploads: boolean;
   hasOpportunities: boolean;
+  isAdmin?: boolean;
   setTab: (tab: Tab) => void;
 };
 
@@ -51,8 +52,8 @@ function guideSteps(profileComplete: boolean, hasUploads: boolean, hasOpportunit
   ];
 }
 
-function detailedGuideSteps(profileComplete: boolean, hasUploads: boolean, hasOpportunities: boolean): DetailedGuideStep[] {
-  return [
+function detailedGuideSteps(profileComplete: boolean, hasUploads: boolean, hasOpportunities: boolean, isAdmin = false): DetailedGuideStep[] {
+  const steps: DetailedGuideStep[] = [
     {
       title: "1. Build your profile",
       detail: profileComplete
@@ -108,14 +109,17 @@ function detailedGuideSteps(profileComplete: boolean, hasUploads: boolean, hasOp
       actionLabel: "Open notifications",
       icon: <Bell size={14} />,
     },
-    {
+  ];
+  if (isAdmin) {
+    steps.push({
       title: "8. Check system review",
       detail: "Use Review to inspect provider health, recent search jobs, OCR status, eval runs, and source trust flags.",
       target: "admin",
       actionLabel: "Open review",
       icon: <ShieldCheck size={14} />,
-    },
-  ];
+    });
+  }
+  return steps;
 }
 
 export function OnboardingGuide({ profileComplete, hasUploads, hasOpportunities, setTab }: UserGuideProps) {
@@ -157,11 +161,11 @@ export function OnboardingGuide({ profileComplete, hasUploads, hasOpportunities,
   );
 }
 
-export function FloatingCompassHelp({ profileComplete, hasUploads, hasOpportunities, setTab }: UserGuideProps) {
+export function FloatingCompassHelp({ profileComplete, hasUploads, hasOpportunities, isAdmin, setTab }: UserGuideProps) {
   const [open, setOpen] = useState(false);
   const steps = guideSteps(profileComplete, hasUploads, hasOpportunities);
   const nextStep = steps.find((step) => !step.complete) ?? steps[steps.length - 1];
-  const detailedSteps = detailedGuideSteps(profileComplete, hasUploads, hasOpportunities);
+  const detailedSteps = detailedGuideSteps(profileComplete, hasUploads, hasOpportunities, isAdmin);
 
   return (
     <div className={`floating-help ${open ? "open" : ""}`}>

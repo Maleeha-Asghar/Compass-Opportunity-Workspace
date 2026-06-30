@@ -321,7 +321,11 @@ def update_profile(request: ProfileUpdateRequest, current_user: CurrentUser = De
 def get_profile(current_user: CurrentUser = Depends(get_current_user)) -> dict[str, Any]:
     compass_user_id = graph.repository.ensure_compass_user_id(current_user.id)
     profile = graph.repository.get_profile(current_user.id)
-    return {"profile": profile, "compass_user_id": compass_user_id}
+    return {
+        "profile": profile,
+        "compass_user_id": compass_user_id,
+        "is_admin": graph.repository.is_admin_user(current_user.id),
+    }
 
 
 @app.put("/profile/me")
@@ -332,6 +336,7 @@ def save_profile(profile: StudentProfile, current_user: CurrentUser = Depends(ge
         "profile": profile_dict,
         "saved_profile": saved,
         "compass_user_id": saved.get("compass_user_id"),
+        "is_admin": graph.repository.is_admin_user(current_user.id),
     }
 
 

@@ -252,6 +252,7 @@ type ConfirmationRequest = {
 function App() {
   const [token, setToken] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const [compassUserId, setCompassUserId] = useState("");
   const [tab, setTab] = useState<Tab>("search");
   const [output, setOutput] = useState<unknown>(null);
@@ -284,6 +285,10 @@ function App() {
   const opportunityOptions = useMemo(
     () => mergeOpportunityLists(workspaceOpportunities, discoveredOpportunities),
     [workspaceOpportunities, discoveredOpportunities],
+  );
+  const visibleNavItems = useMemo(
+    () => navItems.filter((item) => item.target !== "admin" || isAdmin),
+    [isAdmin],
   );
 
   const notify = (kind: "success" | "error", message: string) => {
@@ -327,6 +332,7 @@ function App() {
     await supabase?.auth.signOut();
     setToken("");
     setUserEmail("");
+    setIsAdmin(false);
     setCompassUserId("");
     setOutput(null);
     setDiscoveredOpportunities([]);
@@ -346,6 +352,7 @@ function App() {
     setProfileForm(loaded);
     setProfileLoaded(true);
     setCompassUserId(result.compass_user_id ?? result.profile?.compass_user_id ?? "");
+    setIsAdmin(Boolean(result.is_admin));
     return loaded;
   };
 
@@ -362,6 +369,7 @@ function App() {
       setProfileLoaded(true);
       setIsNewAccount(false);
       setCompassUserId(result.compass_user_id ?? result.saved_profile?.compass_user_id ?? "");
+      setIsAdmin(Boolean(result.is_admin));
       setOutput(result);
     }, "Profile saved successfully.");
 
@@ -394,6 +402,7 @@ function App() {
       setProfileForm({ ...EMPTY_PROFILE });
       setProfileLoaded(false);
       setIsNewAccount(false);
+      setIsAdmin(false);
       setCompassUserId("");
       setWorkspaceOpportunities([]);
       setWorkspaceSearchJobs([]);
@@ -426,6 +435,12 @@ function App() {
       cancelled = true;
     };
   }, [token]);
+
+  useEffect(() => {
+    if (!isAdmin && tab === "admin") {
+      setTab("search");
+    }
+  }, [isAdmin, tab]);
 
   const runSearch = async () => {
     const settledQuery = query.trim();
@@ -560,7 +575,7 @@ function App() {
           <SidebarBrandLockup collapsed={sidebarCollapsed} />
         </button>
         <nav className="sidebar-nav" aria-label="Primary">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavButton key={item.target} tab={tab} target={item.target} setTab={setTab} icon={item.icon} label={item.label} compact={sidebarCollapsed} />
           ))}
         </nav>
@@ -589,6 +604,7 @@ function App() {
                 profileComplete={profileComplete}
                 hasUploads={hasUploads}
                 hasOpportunities={hasOpportunities}
+                isAdmin={isAdmin}
                 setTab={setTab}
               />
             )}
@@ -666,7 +682,7 @@ function App() {
                 {tab === "documents" && <DocumentPanel token={token} profile={profile} setOutput={setOutput} runAction={runAction} loading={loading} opportunityOptions={opportunityOptions} />}
                 {tab === "uploads" && <UploadPanel token={token} setOutput={setOutput} runAction={runAction} loading={loading} uploads={workspaceUploads} refreshWorkspace={loadWorkspaceData} />}
                 {tab === "notifications" && <NotificationPanel token={token} setOutput={setOutput} runAction={runAction} loading={loading} tasks={workspaceTasks} />}
-                {tab === "admin" && <AdminPanel token={token} setOutput={setOutput} runAction={runAction} loading={loading} />}
+                {tab === "admin" && isAdmin && <AdminPanel token={token} setOutput={setOutput} runAction={runAction} loading={loading} />}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -684,7 +700,7 @@ function App() {
         </div>
       </section>
       <nav className="bottom-nav" aria-label="Mobile navigation">
-        {navItems.map((item) => (
+        {visibleNavItems.map((item) => (
           <NavButton key={item.target} tab={tab} target={item.target} setTab={setTab} icon={item.icon} label={item.label} compact />
         ))}
       </nav>
@@ -692,6 +708,7 @@ function App() {
         profileComplete={profileComplete}
         hasUploads={hasUploads}
         hasOpportunities={hasOpportunities}
+        isAdmin={isAdmin}
         setTab={setTab}
       />
       <NotificationBar notice={notice} onClose={() => setNotice(null)} />
