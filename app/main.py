@@ -20,6 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.graph import CompassGraph
 from schemas.profile_schema import StudentProfile
 from tools.auth_tool import CurrentUser, get_current_user
+from tools.email_tool import EmailClient
 from tools.short_id import normalize_opportunity_id
 
 settings = get_settings()
@@ -604,6 +605,16 @@ def list_source_flags(limit: int = 100, current_user: CurrentUser = Depends(requ
 @app.get("/admin/health")
 def admin_health(current_user: CurrentUser = Depends(require_admin_user)) -> dict[str, Any]:
     return {"health": graph.repository.admin_health_summary(), "ocr": graph.ocr_diagnostics()}
+
+
+@app.post("/admin/test-email")
+def admin_test_email(current_user: CurrentUser = Depends(require_admin_user)) -> dict[str, Any]:
+    response = EmailClient().send(
+        to_email=current_user.email,
+        subject="Compass email test",
+        text="This is a test email from deployed Compass.",
+    )
+    return {"sent": True, "response": response}
 
 
 @app.get("/notifications/preferences")
