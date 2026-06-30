@@ -113,8 +113,6 @@ class Settings(BaseSettings):
 
     @property
     def effective_email_provider(self) -> Literal["resend", "postmark", "smtp"]:
-        if self.smtp_host or self.smtp_username or self.smtp_password:
-            return "smtp"
         return self.email_provider
 
     @property
