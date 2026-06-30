@@ -609,11 +609,14 @@ def admin_health(current_user: CurrentUser = Depends(require_admin_user)) -> dic
 
 @app.post("/admin/test-email")
 def admin_test_email(current_user: CurrentUser = Depends(require_admin_user)) -> dict[str, Any]:
-    response = EmailClient().send(
-        to_email=current_user.email,
-        subject="Compass email test",
-        text="This is a test email from deployed Compass.",
-    )
+    try:
+        response = EmailClient().send(
+            to_email=current_user.email,
+            subject="Compass email test",
+            text="This is a test email from deployed Compass.",
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}") from exc
     return {"sent": True, "response": response}
 
 
