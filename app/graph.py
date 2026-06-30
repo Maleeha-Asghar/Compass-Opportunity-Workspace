@@ -9,6 +9,7 @@ from agents.final_response_agent import FinalResponseAgent
 from agents.image_extraction_agent import ImageExtractionAgent
 from agents.intent_router import IntentRouter
 from agents.deadline_planner_agent import DeadlinePlannerAgent
+from agents.deadline_verifier_agent import DeadlineVerifierAgent
 from agents.drafting_agent import DraftingAgent
 from agents.eligibility_agent import EligibilityAgent
 from agents.prioritization_agent import PrioritizationAgent
@@ -55,6 +56,11 @@ class CompassGraph:
         self.extraction_agent = OpportunityExtractionAgent(client=llm_client) if llm_client else OpportunityExtractionAgent()
         self._image_extraction_agent: ImageExtractionAgent | None = None
         self.source_verification_agent = SourceVerificationAgent(client=llm_client) if llm_client else SourceVerificationAgent()
+        self.deadline_verifier_agent = DeadlineVerifierAgent(
+            search_provider=self.search_provider,
+            scraper=self.scraper,
+            client=llm_client,
+        )
         self.eligibility_agent = EligibilityAgent(client=llm_client) if llm_client else EligibilityAgent()
         self.deduplication_engine = DeduplicationEngine()
         self.prioritization_agent = PrioritizationAgent(client=llm_client) if llm_client else PrioritizationAgent()
@@ -165,11 +171,12 @@ class CompassGraph:
                 completed_at=datetime.now(timezone.utc).isoformat(),
             )
         except TimeoutError as exc:
-            self.repository.fail_search_job(
-                job_id,
-                str(exc),
-                progress_message="Search timed out",
-            )
+            if not self._complete_search_job_with_partial(job_id, str(exc)):
+                self.repository.fail_search_job(
+                    job_id,
+                    str(exc),
+                    progress_message="Search timed out",
+                )
             raise
         except Exception as exc:
             current = self.repository.get_search_job_by_id(job_id)
@@ -219,6 +226,44 @@ class CompassGraph:
             self.repository.update_search_job(job_id, **updates)
         state["stage_payload"] = stage_payload
 
+    def _complete_search_job_with_partial(self, job_id: str, error: str) -> bool:
+        current = self.repository.get_search_job_by_id(job_id) or {}
+        result = current.get("result") or {}
+        stage_payload = current.get("stage_payload") or {}
+        partial = {
+            **result,
+            "queries": result.get("queries") or stage_payload.get("search_queries") or [],
+            "raw_result_count": result.get("raw_result_count") or len(stage_payload.get("raw_search_results") or []),
+            "candidate_count": result.get("candidate_count") or len(stage_payload.get("candidates") or []),
+            "extracted_count": result.get("extracted_count") or len(stage_payload.get("extracted_opportunities") or []),
+            "deduplicated_count": result.get("deduplicated_count") or len(stage_payload.get("deduplicated_opportunities") or []),
+            "ranked_count": result.get("ranked_count") or len(stage_payload.get("prioritized_opportunities") or []),
+            "opportunities": (
+                result.get("opportunities")
+                or stage_payload.get("saved_opportunities")
+                or stage_payload.get("prioritized_opportunities")
+                or stage_payload.get("deduplicated_opportunities")
+                or stage_payload.get("extracted_opportunities")
+                or []
+            ),
+        }
+        if not partial["opportunities"]:
+            return False
+        errors = list(partial.get("errors") or [])
+        errors.append(error)
+        partial["errors"] = errors
+        partial["answer"] = "Search timed out, so Compass returned the opportunities found so far."
+        self.repository.update_search_job(
+            job_id,
+            status="completed",
+            current_stage="completed",
+            progress_message=f"Search timed out; returned {len(partial['opportunities'])} partial result(s)",
+            result=partial,
+            error=error,
+            completed_at=datetime.now(timezone.utc).isoformat(),
+        )
+        return True
+
     @staticmethod
     def _search_result_summary(stage_payload: dict[str, Any], state: AgentState) -> dict[str, Any]:
         return {
@@ -228,7 +273,13 @@ class CompassGraph:
             "extracted_count": len(stage_payload.get("extracted_opportunities") or []),
             "deduplicated_count": len(stage_payload.get("deduplicated_opportunities") or []),
             "ranked_count": len(stage_payload.get("prioritized_opportunities") or []),
-            "opportunities": stage_payload.get("saved_opportunities") or stage_payload.get("prioritized_opportunities") or [],
+            "opportunities": (
+                stage_payload.get("saved_opportunities")
+                or stage_payload.get("prioritized_opportunities")
+                or stage_payload.get("deduplicated_opportunities")
+                or stage_payload.get("extracted_opportunities")
+                or []
+            ),
             "errors": state.get("errors", []),
         }
 
@@ -447,6 +498,12 @@ class CompassGraph:
         tasks = [{**task, "user_id": user_id} for task in tasks]
         return self.repository.save_application_tasks(tasks)
 
+    def verify_deadline(self, opportunity_id: str) -> dict[str, Any]:
+        opportunity = self.repository.get_opportunity(opportunity_id)
+        result = self.deadline_verifier_agent.verify(opportunity)
+        saved = self.repository.update_opportunity_deadline_verification(opportunity["id"], result)
+        return {"deadline_verification": result, "opportunity": saved}
+
     def draft_document(
         self,
         user_id: str,
@@ -496,6 +553,9 @@ class CompassGraph:
     ) -> dict[str, Any]:
         action = self.tracker_agent.parse_update(text, opportunity_id)
         return self.repository.update_tracker(user_id, action)
+
+    def update_tracker_status(self, user_id: str, task_id: str, status: str) -> dict[str, Any]:
+        return self.repository.update_application_task_status(user_id, task_id, status)
 
     def extract_poster(self, user_id: str, file_name: str, file_obj: Any) -> dict[str, Any]:
         temp_path, mime_type = self.upload_service.persist_temp_file(file_name, file_obj)
@@ -652,6 +712,19 @@ class CompassGraph:
         if step_pause > 0:
             time.sleep(step_pause)
         extracted["verification"] = self.source_verification_agent.verify(extracted, candidate)
+        if self.deadline_verifier_agent.should_verify(extracted):
+            try:
+                deadline_verification = self.deadline_verifier_agent.verify(
+                    extracted,
+                    max_queries=10,
+                    max_results_per_query=3,
+                )
+                extracted["verification"]["deadline_verification"] = deadline_verification
+                if deadline_verification.get("deadline") and deadline_verification.get("status") in {"verified", "estimated"}:
+                    extracted["deadline"] = deadline_verification["deadline"]
+            except Exception as exc:
+                notes = extracted["verification"].setdefault("notes", [])
+                notes.append(f"Deadline verifier skipped: {exc.__class__.__name__}")
         if step_pause > 0:
             time.sleep(step_pause)
         extracted["eligibility_result"] = self.eligibility_agent.evaluate(profile, extracted, today)
@@ -672,15 +745,27 @@ class CompassGraph:
         opportunities: list[dict[str, Any]] = []
         pause = self.settings.search_extraction_pause_seconds
         for index, candidate in enumerate(candidates):
+            self._check_search_timeout(state or {})
             if index > 0 and pause > 0:
                 time.sleep(pause)
+                self._check_search_timeout(state or {})
             try:
                 extracted = self._process_candidate(candidate, profile, today, user_query=user_query)
                 if extracted is not None:
                     opportunities.append(extracted)
+                    if state is not None:
+                        self._persist_search_partial(
+                            state,
+                            stage="extracting",
+                            progress_message=f"Extracted {len(opportunities)} opportunity record(s)",
+                            extracted_opportunities=opportunities,
+                        )
+            except TimeoutError:
+                raise
             except Exception as exc:
                 if state is not None:
                     self._record_error(state, f"candidate extraction for {candidate['source_url']}", exc)
+            self._check_search_timeout(state or {})
         return opportunities
 
     def _save_opportunities(self, opportunities: list[dict[str, Any]], state: AgentState | None = None) -> list[dict[str, Any]]:

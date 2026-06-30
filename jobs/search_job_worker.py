@@ -56,11 +56,13 @@ def reclaim_stale_jobs(graph: CompassGraph) -> None:
         except ValueError:
             continue
         if (now - updated).total_seconds() > cutoff_seconds:
-            graph.repository.fail_search_job(
-                job["id"],
-                f"Search job timed out after {cutoff_seconds} seconds.",
-                progress_message="Search timed out",
-            )
+            error = f"Search job timed out after {cutoff_seconds} seconds."
+            if not graph._complete_search_job_with_partial(job["id"], error):
+                graph.repository.fail_search_job(
+                    job["id"],
+                    error,
+                    progress_message="Search timed out",
+                )
 
 
 def run_worker(poll_interval_seconds: float = 5.0, once: bool = False) -> None:
@@ -73,17 +75,23 @@ def run_worker(poll_interval_seconds: float = 5.0, once: bool = False) -> None:
             try:
                 subprocess.run(command, check=True, timeout=graph.settings.search_job_timeout_seconds)
             except subprocess.TimeoutExpired:
-                graph.repository.fail_search_job(
-                    job["id"],
-                    f"Search job timed out after {graph.settings.search_job_timeout_seconds} seconds.",
-                    progress_message="Search timed out",
-                )
+                error = f"Search job timed out after {graph.settings.search_job_timeout_seconds} seconds."
+                if not graph._complete_search_job_with_partial(job["id"], error):
+                    graph.repository.fail_search_job(
+                        job["id"],
+                        error,
+                        progress_message="Search timed out",
+                    )
             except subprocess.CalledProcessError as exc:
-                graph.repository.fail_search_job(
-                    job["id"],
-                    f"Search worker exited with code {exc.returncode}.",
-                    progress_message="Search failed",
-                )
+                current = graph.repository.get_search_job_by_id(job["id"]) or {}
+                if current.get("status") != "completed":
+                    error = f"Search worker exited with code {exc.returncode}."
+                    if not graph._complete_search_job_with_partial(job["id"], error):
+                        graph.repository.fail_search_job(
+                            job["id"],
+                            error,
+                            progress_message="Search failed",
+                        )
             if once:
                 return
             continue

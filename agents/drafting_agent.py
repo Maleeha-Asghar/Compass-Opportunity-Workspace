@@ -36,7 +36,7 @@ class DraftingAgent:
                 f"Opportunity:\n{opportunity}"
                 f"{instruction_text}"
             ),
-            temperature=0.4,
+            temperature=0.5,
         )
         content = str(content or "")
         if not content.strip():

@@ -83,6 +83,7 @@ class Settings(BaseSettings):
     max_model_retries: int = Field(default=6, validation_alias="MAX_MODEL_RETRIES")
     model_timeout_seconds: int = Field(default=90, validation_alias="MODEL_TIMEOUT_SECONDS")
     max_parallel_model_calls: int = Field(default=2, validation_alias="MAX_PARALLEL_MODEL_CALLS")
+    cors_allowed_origins: str = Field(default="", validation_alias="CORS_ALLOWED_ORIGINS")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
@@ -135,6 +136,24 @@ class Settings(BaseSettings):
         if self.reminder_auto_dispatch is not None:
             return self.reminder_auto_dispatch
         return self.environment == "local" and self.email_configured
+
+    @property
+    def allowed_cors_origins(self) -> list[str]:
+        configured = [
+            origin.strip().rstrip("/")
+            for origin in self.cors_allowed_origins.split(",")
+            if origin.strip()
+        ]
+        local = ["http://127.0.0.1:5173", "http://localhost:5173"]
+        return [*local, *configured]
+
+    def is_allowed_cors_origin(self, origin: str | None) -> bool:
+        if not origin:
+            return False
+        normalized = origin.rstrip("/")
+        if normalized in self.allowed_cors_origins:
+            return True
+        return normalized.startswith("http://127.0.0.1:") or normalized.startswith("http://localhost:")
 
     def require_mistral(self) -> str:
         if not self.mistral_api_key:

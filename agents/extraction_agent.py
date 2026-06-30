@@ -138,7 +138,13 @@ class OpportunityExtractionAgent:
     @staticmethod
     def _normalize_deadline(deadline: object, deadline_text: object) -> str | None:
         if deadline and str(deadline).strip().lower() not in {"", "null", "none"}:
-            return date.fromisoformat(str(deadline)).isoformat()
+            try:
+                parsed = date.fromisoformat(str(deadline)[:10])
+            except ValueError:
+                return None
+            if parsed < date.today():
+                return None
+            return parsed.isoformat()
         return None
 
     @staticmethod

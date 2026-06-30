@@ -37,8 +37,6 @@ DENYLIST_DOMAINS = {
     "www.tiktok.com",
     "pinterest.com",
     "www.pinterest.com",
-    "scholarshipsads.com",
-    "www.scholarshipsads.com",
     "expresstechjobs.com",
     "www.expresstechjobs.com",
     "expatrio.com",

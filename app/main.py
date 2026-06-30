@@ -30,11 +30,9 @@ app = FastAPI(title=settings.app_name)
 logger = logging.getLogger(__name__)
 reminder_task: asyncio.Task | None = None
 
-# Allow local frontend dev servers to call the API.
-ALLOWED_CORS_ORIGINS = {"http://127.0.0.1:5173", "http://localhost:5173"}
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(ALLOWED_CORS_ORIGINS),
+    allow_origins=settings.allowed_cors_origins,
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_credentials=True,
     allow_methods=["*"],
@@ -105,10 +103,7 @@ async def cors_safe_errors(request: Request, call_next):
     except Exception as exc:
         detail = str(exc) if settings.environment != "production" else "Backend request failed."
         response = JSONResponse(status_code=500, content={"detail": detail})
-    if origin in ALLOWED_CORS_ORIGINS or (
-        origin
-        and (origin.startswith("http://127.0.0.1:") or origin.startswith("http://localhost:"))
-    ):
+    if settings.is_allowed_cors_origin(origin):
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Vary"] = "Origin"
@@ -147,6 +142,10 @@ class DocumentDownloadRequest(BaseModel):
 class TrackerUpdateRequest(BaseModel):
     text: str
     opportunity_id: str | None = Field(default=None, min_length=1, max_length=8)
+
+
+class TrackerStatusUpdateRequest(BaseModel):
+    status: str = Field(min_length=1, max_length=32)
 
 
 class NotificationPreferencesRequest(BaseModel):
@@ -215,13 +214,13 @@ def _build_docx_bytes(content: str) -> bytes:
     )
     rels = (
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-        "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
-        "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"word/document.xml\"/>"
-        "</Relationships>"
+        "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"/>"
     )
     root_rels = (
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-        "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"/>"
+        "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+        "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"word/document.xml\"/>"
+        "</Relationships>"
     )
     buffer = BytesIO()
     with ZipFile(buffer, "w", ZIP_DEFLATED) as docx:
@@ -446,6 +445,17 @@ def create_deadline_plan(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+@app.post("/opportunities/{opportunity_id}/verify-deadline")
+def verify_opportunity_deadline(
+    opportunity_id: str,
+    current_user: CurrentUser = Depends(get_current_user),
+) -> dict[str, Any]:
+    try:
+        return graph.verify_deadline(normalize_opportunity_id(opportunity_id))
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
 @app.post("/documents/generate")
 def generate_document(request: DocumentGenerateRequest, current_user: CurrentUser = Depends(get_current_user)) -> dict[str, Any]:
     try:
@@ -518,6 +528,19 @@ def update_tracker(
     tracker_item = graph.update_tracker(current_user.id, request.text, request.opportunity_id)
     dispatch_due_reminders_once(background_tasks)
     return {"tracker_item": tracker_item}
+
+
+@app.patch("/tracker/{task_id}/status")
+def update_tracker_status(
+    task_id: str,
+    request: TrackerStatusUpdateRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+) -> dict[str, Any]:
+    try:
+        tracker_item = graph.update_tracker_status(current_user.id, task_id, request.status)
+        return {"tracker_item": tracker_item}
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @app.get("/tracker")

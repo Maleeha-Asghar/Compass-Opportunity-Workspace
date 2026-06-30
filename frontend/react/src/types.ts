@@ -80,6 +80,19 @@ export type OpportunityRecord = {
     domain?: string;
     notes?: string[];
     risk_flags?: string[];
+    deadline_verification?: {
+      deadline?: string | null;
+      deadline_type?: string;
+      applies_to?: string;
+      source_url?: string | null;
+      source_text?: string;
+      confidence?: number;
+      confidence_label?: string;
+      source_type?: string;
+      status?: string;
+      note?: string;
+      last_checked?: string;
+    };
   };
   eligibility_result?: {
     eligible?: boolean;

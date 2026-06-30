@@ -8,7 +8,6 @@ import {
   BookmarkPlus,
   CalendarClock,
   CheckCircle2,
-  CircleAlert,
   FileText,
   LockKeyhole,
   LogOut,
@@ -24,8 +23,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { AnimatePresence, motion } from "framer-motion";
-import toast, { Toaster } from "react-hot-toast";
-import { api, SUPABASE_ANON_KEY, SUPABASE_URL } from "./api";
+import { api, API_URL, SUPABASE_ANON_KEY, SUPABASE_URL } from "./api";
 import { FloatingCompassHelp, OnboardingGuide } from "./features/onboarding/UserGuide";
 import { SearchHistoryPanel } from "./features/search/SearchHistoryPanel";
 import type {
@@ -243,6 +241,14 @@ const pageMeta: Record<Tab, { title: string; eyebrow: string }> = {
   admin: { title: "Review Console", eyebrow: "Quality and trust signals" },
 };
 
+type ConfirmationRequest = {
+  title: string;
+  detail: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  onConfirm: () => Promise<void> | void;
+};
+
 function App() {
   const [token, setToken] = useState("");
   const [userEmail, setUserEmail] = useState("");
@@ -258,6 +264,7 @@ function App() {
   const [loading, setLoading] = useState<Partial<Record<LoadingKey, boolean>>>({});
   const [busyMessage, setBusyMessage] = useState("");
   const [notice, setNotice] = useState<Notice>(null);
+  const [confirmation, setConfirmation] = useState<ConfirmationRequest | null>(null);
   const [searchJob, setSearchJob] = useState<SearchJob | null>(null);
   const [discoveredOpportunities, setDiscoveredOpportunities] = useState<OpportunityRecord[]>([]);
   const [searchSummary, setSearchSummary] = useState<SearchResultPayload | null>(null);
@@ -281,7 +288,6 @@ function App() {
 
   const notify = (kind: "success" | "error", message: string) => {
     setNotice({ kind, message });
-    toast[kind](message);
   };
 
   const runAction = async (key: LoadingKey, message: string, action: () => Promise<void>, successMessage?: string) => {
@@ -656,7 +662,7 @@ function App() {
                     setTab={setTab}
                   />
                 )}
-                {tab === "tracker" && <TrackerPanel token={token} setOutput={setOutput} runAction={runAction} loading={loading} setTab={setTab} hasOpportunities={hasOpportunities} tasks={workspaceTasks} refreshWorkspace={loadWorkspaceData} opportunityOptions={opportunityOptions} />}
+                {tab === "tracker" && <TrackerPanel token={token} setOutput={setOutput} runAction={runAction} loading={loading} setTab={setTab} hasOpportunities={hasOpportunities} tasks={workspaceTasks} refreshWorkspace={loadWorkspaceData} opportunityOptions={opportunityOptions} requestConfirmation={setConfirmation} />}
                 {tab === "documents" && <DocumentPanel token={token} profile={profile} setOutput={setOutput} runAction={runAction} loading={loading} opportunityOptions={opportunityOptions} />}
                 {tab === "uploads" && <UploadPanel token={token} setOutput={setOutput} runAction={runAction} loading={loading} uploads={workspaceUploads} refreshWorkspace={loadWorkspaceData} />}
                 {tab === "notifications" && <NotificationPanel token={token} setOutput={setOutput} runAction={runAction} loading={loading} tasks={workspaceTasks} />}
@@ -682,13 +688,14 @@ function App() {
           <NavButton key={item.target} tab={tab} target={item.target} setTab={setTab} icon={item.icon} label={item.label} compact />
         ))}
       </nav>
-      <Toaster position="bottom-center" toastOptions={{ duration: 4200 }} />
       <FloatingCompassHelp
         profileComplete={profileComplete}
         hasUploads={hasUploads}
         hasOpportunities={hasOpportunities}
         setTab={setTab}
       />
+      <NotificationBar notice={notice} onClose={() => setNotice(null)} />
+      <ConfirmationToast confirmation={confirmation} onClose={() => setConfirmation(null)} />
     </main>
   );
 }
@@ -904,7 +911,6 @@ function AuthScreen({
         </form>
         {message && <p className="message">{message}</p>}
       </section>
-        <Toaster position="bottom-center" toastOptions={{ duration: 4200 }} />
       </div>
     </>
   );
@@ -936,20 +942,6 @@ function AccountPanel({
   const updateField = <K extends keyof StudentProfile>(key: K, value: StudentProfile[K]) => {
     setProfileForm({ ...profileForm, [key]: value });
   };
-  const requiredFields = [
-    Boolean(profileForm.country?.trim()),
-    Boolean(profileForm.degree?.trim()),
-    Boolean(profileForm.field?.trim()),
-  ];
-  const helpfulFields = [
-    Boolean(profileForm.preferred_countries.length || profileForm.preferred_regions.length),
-    Boolean(profileForm.preferred_opportunity_types.length),
-    Boolean(profileForm.budget_preference),
-    Boolean(profileForm.career_goal?.trim()),
-  ];
-  const profileProgress = Math.round(
-    ([...requiredFields, ...helpfulFields].filter(Boolean).length / (requiredFields.length + helpfulFields.length)) * 100,
-  );
 
   return (
     <div className="panel-stack">
@@ -962,22 +954,6 @@ function AccountPanel({
           </p>
         </div>
       )}
-
-      <div className="panel account-progress-panel">
-        <PanelHeader title="Guided setup" meta="Step 1 of 3: profile, CV upload, then search" />
-        <div className="profile-progress-row">
-          <strong>{profileProgress}% complete</strong>
-          <span>{profileComplete ? "Ready for matching" : "Add required fields to unlock search"}</span>
-        </div>
-        <div className="guide-progress">
-          <span style={{ width: `${profileProgress}%` }} />
-        </div>
-        <div className="field-why-grid">
-          <div><b>Country</b><span>Checks nationality, residency, and region-specific eligibility.</span></div>
-          <div><b>Degree and field</b><span>Filters by study level and academic fit.</span></div>
-          <div><b>Goals and tests</b><span>Ranks opportunities by funding, deadlines, and missing requirements.</span></div>
-        </div>
-      </div>
 
       <div className="panel">
         <PanelHeader
@@ -1510,9 +1486,13 @@ function formatFundingLabel(funding?: string | null): string {
 }
 
 function opportunityMatchScore(item: OpportunityRecord): number | null {
-  if (typeof item.eligibility_result?.score === "number") return item.eligibility_result.score;
-  if (typeof item.priority_score === "number") return item.priority_score;
+  if (typeof item.eligibility_result?.score === "number") return normalizePercentScore(item.eligibility_result.score);
+  if (typeof item.priority_score === "number") return normalizePercentScore(item.priority_score);
   return null;
+}
+
+function normalizePercentScore(score: number): number {
+  return score <= 1 ? score * 100 : score;
 }
 
 function isStrongMatch(item: OpportunityRecord): boolean {
@@ -1541,6 +1521,17 @@ function deadlineRiskLabel(item: OpportunityRecord): string {
   if (isDeadlineSoon(item.deadline, 14)) return "High";
   if (isDeadlineSoon(item.deadline, 45)) return "Medium";
   return "Low";
+}
+
+function deadlineVerificationLabel(item: OpportunityRecord): string {
+  const verification = item.verification?.deadline_verification;
+  if (!verification) return item.deadline ? "Extracted" : "Not verified";
+  if (verification.status === "not_found") return "Not found";
+  return verification.confidence_label || (verification.confidence && verification.confidence >= 0.8 ? "High" : "Medium");
+}
+
+function deadlineSourceLabel(sourceType?: string): string {
+  return (sourceType || "unknown").replace(/_/g, " ");
 }
 
 function nextOpportunityAction(item: OpportunityRecord, isSaved: boolean): string {
@@ -1795,6 +1786,10 @@ function OpportunityPanel({
                 <span>{deadlineRiskLabel(selectedItem)}</span>
               </div>
               <div className="atlas-status-row">
+                <b>Deadline confidence</b>
+                <span>{deadlineVerificationLabel(selectedItem)}</span>
+              </div>
+              <div className="atlas-status-row">
                 <b>Funding</b>
                 <span>{formatFundingLabel(selectedItem.funding_type)}</span>
               </div>
@@ -1842,6 +1837,7 @@ function OpportunityCard({
 }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const verification = item.verification ?? {};
+  const deadlineVerification = verification.deadline_verification;
   const eligibility = item.eligibility_result ?? {};
   const applicationUrl = formatDisplayValue(item.application_url);
   const showUrl = applicationUrl !== "Not listed" && applicationUrl.startsWith("http");
@@ -1922,6 +1918,10 @@ function OpportunityCard({
                 <dd>{formatDeadline(item.deadline)}</dd>
               </div>
               <div>
+                <dt>Deadline confidence</dt>
+                <dd>{deadlineVerificationLabel(item)}</dd>
+              </div>
+              <div>
                 <dt>Start date</dt>
                 <dd>Not listed</dd>
               </div>
@@ -1994,6 +1994,32 @@ function OpportunityCard({
             )}
 
             <section className="opportunity-section">
+              <h4>Deadline verification</h4>
+              {deadlineVerification ? (
+                <>
+                  <p>
+                    Status: {deadlineVerification.status?.replace(/_/g, " ") || "unknown"} · Confidence: {deadlineVerificationLabel(item)}
+                    {deadlineVerification.last_checked ? ` · Last checked ${formatDeadline(deadlineVerification.last_checked)}` : ""}
+                  </p>
+                  <p>
+                    Source: {deadlineSourceLabel(deadlineVerification.source_type)}
+                    {deadlineVerification.source_url ? " · " : ""}
+                    {deadlineVerification.source_url && (
+                      <a href={deadlineVerification.source_url} target="_blank" rel="noreferrer">
+                        Open source
+                      </a>
+                    )}
+                  </p>
+                  {deadlineVerification.applies_to && <p>Applies to: {deadlineVerification.applies_to}</p>}
+                  {deadlineVerification.source_text && <p className="muted-text">Evidence: {deadlineVerification.source_text}</p>}
+                  {deadlineVerification.note && <p className="muted-text">{deadlineVerification.note}</p>}
+                </>
+              ) : (
+                <p className="muted-text">Deadline has not been deeply verified yet. Use Check Deadline for a targeted official-source search.</p>
+              )}
+            </section>
+
+            <section className="opportunity-section">
               <h4>Source verification</h4>
               <p>
                 Domain: {formatDisplayValue(verification.domain)} · Trust: {trustLabel(verification.trust_level)}
@@ -2055,7 +2081,13 @@ function OpportunityDetailPanel({
   setTab: (tab: Tab) => void;
   refreshWorkspace: () => Promise<void>;
 }) {
-  if (!item) {
+  const [detailItem, setDetailItem] = useState<OpportunityRecord | null>(item);
+
+  useEffect(() => {
+    setDetailItem(item);
+  }, [item]);
+
+  if (!detailItem) {
     return (
       <div className="panel">
         <PanelHeader title="Opportunity detail" meta="No opportunity selected" />
@@ -2069,19 +2101,31 @@ function OpportunityDetailPanel({
 
   const save = async () =>
     runAction("opportunities", "Saving opportunity to your account...", async () => {
-      const result = item.id
-        ? await api(`/opportunities/${item.id}/save`, token, { method: "POST", body: "{}" })
-        : await api("/opportunities/save", token, { method: "POST", body: JSON.stringify({ opportunity: item }) });
+      const result = detailItem.id
+        ? await api(`/opportunities/${detailItem.id}/save`, token, { method: "POST", body: "{}" })
+        : await api("/opportunities/save", token, { method: "POST", body: JSON.stringify({ opportunity: detailItem }) });
       setOutput(result);
     }, "Opportunity saved successfully.");
 
   const plan = async () => {
-    if (!item.id) return;
+    if (!detailItem.id) return;
     await runAction("opportunities", "Creating deadline plan...", async () => {
-      const result = await api(`/opportunities/${item.id}/deadline-plan`, token, { method: "POST", body: "{}" });
+      const result = await api(`/opportunities/${detailItem.id}/deadline-plan`, token, { method: "POST", body: "{}" });
       setOutput(result);
       await refreshWorkspace();
     }, "Deadline plan created successfully.");
+  };
+
+  const checkDeadline = async () => {
+    if (!detailItem.id) return;
+    await runAction("opportunities", "Checking official deadline sources...", async () => {
+      const result = await api(`/opportunities/${detailItem.id}/verify-deadline`, token, { method: "POST", body: "{}" });
+      if (result.opportunity) {
+        setDetailItem(result.opportunity as OpportunityRecord);
+      }
+      setOutput(result);
+      await refreshWorkspace();
+    }, "Deadline check completed.");
   };
 
   return (
@@ -2094,12 +2138,15 @@ function OpportunityDetailPanel({
           <button onClick={save} disabled={loading.opportunities}>
             <BookmarkPlus size={16} /> Save
           </button>
-          <button onClick={plan} disabled={!item.id || loading.opportunities}>
+          <button onClick={plan} disabled={!detailItem.id || loading.opportunities}>
             <CalendarClock size={16} /> Plan
+          </button>
+          <button onClick={checkDeadline} disabled={!detailItem.id || loading.opportunities}>
+            <Search size={16} /> Check Deadline
           </button>
         </div>
       </div>
-      <OpportunityCard item={item} defaultExpanded />
+      <OpportunityCard item={detailItem} defaultExpanded />
     </div>
   );
 }
@@ -2154,15 +2201,19 @@ function TrackerPanel({
   tasks,
   refreshWorkspace,
   opportunityOptions,
+  requestConfirmation,
 }: PanelProps & {
   setTab: (tab: Tab) => void;
   hasOpportunities: boolean;
   tasks: ApplicationTaskRecord[];
   refreshWorkspace: () => Promise<void>;
   opportunityOptions: OpportunityRecord[];
+  requestConfirmation: (confirmation: ConfirmationRequest | null) => void;
 }) {
   const [text, setText] = useState("");
   const [opportunityId, setOpportunityId] = useState("");
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const trackerStages = ["pending", "preparing", "submitted", "waiting", "result"];
   const tasksByStatus = useMemo(() => {
     const groups = new Map<string, ApplicationTaskRecord[]>();
     for (const task of tasks) {
@@ -2171,6 +2222,29 @@ function TrackerPanel({
     }
     return groups;
   }, [tasks]);
+  const taskKey = (task: ApplicationTaskRecord) => task.internal_id || task.id;
+  const moveTask = (task: ApplicationTaskRecord, stage: string) => {
+    const currentStatus = formatDisplayValue(task.status || "pending").toLowerCase();
+    if (currentStatus === stage) return;
+    const taskLabel = formatDisplayValue(task.title || task.next_task);
+    requestConfirmation({
+      title: "Move tracker card?",
+      detail: `"${taskLabel}" will move from ${formatDisplayValue(currentStatus)} to ${formatDisplayValue(stage)}.`,
+      confirmLabel: "Move",
+      cancelLabel: "Cancel",
+      onConfirm: async () => {
+        const taskId = taskKey(task);
+        await runAction("tracker", "Moving tracker card...", async () => {
+          const result = await api(`/tracker/${taskId}/status`, token, {
+            method: "PATCH",
+            body: JSON.stringify({ status: stage }),
+          });
+          setOutput(result);
+          await refreshWorkspace();
+        }, "Tracker card moved.");
+      },
+    });
+  };
   return (
     <div className="atlas-page">
       <section className="atlas-header">
@@ -2189,21 +2263,42 @@ function TrackerPanel({
                 />
               ) : (
                 <div className="route-board">
-                  {["pending", "preparing", "submitted", "waiting", "result"].map((stage) => {
+                  {trackerStages.map((stage) => {
                     const stageTasks = tasksByStatus.get(stage) ?? [];
                     return (
-                    <div className="route-col" key={stage}>
+                    <div
+                      className={`route-col ${draggedTaskId ? "drop-ready" : ""}`}
+                      key={stage}
+                      onDragOver={(event) => {
+                        if (!draggedTaskId) return;
+                        event.preventDefault();
+                        event.dataTransfer.dropEffect = "move";
+                      }}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        const id = event.dataTransfer.getData("text/plain") || draggedTaskId;
+                        setDraggedTaskId(null);
+                        const task = tasks.find((item) => taskKey(item) === id || item.id === id);
+                        if (task) moveTask(task, stage);
+                      }}
+                    >
                       <h4>{formatDisplayValue(stage)}</h4>
                       {stageTasks.length === 0 ? (
                         <div className="route-empty">No tasks yet.</div>
                       ) : (
                         stageTasks.map((task) => (
-                          <div className="route-empty" key={task.id}>
-                            <strong>{formatDisplayValue(task.title || task.next_task)}</strong>
-                            <span>{formatDisplayValue(task.task_code || task.id)} · Opportunity {formatDisplayValue(task.opportunity_id)}</span>
-                            <span>{task.due_date ? `Due ${formatDeadline(task.due_date)}` : "No due date"}</span>
-                            <span>{emailStatusLabel(task)}</span>
-                          </div>
+                          <ApplicationTaskCard
+                            task={task}
+                            key={task.id}
+                            draggable
+                            onDragStart={(event) => {
+                              const id = taskKey(task);
+                              event.dataTransfer.setData("text/plain", id);
+                              event.dataTransfer.effectAllowed = "move";
+                              setDraggedTaskId(id);
+                            }}
+                            onDragEnd={() => setDraggedTaskId(null)}
+                          />
                         ))
                       )}
                     </div>
@@ -2243,10 +2338,7 @@ function TrackerPanel({
               ) : tasks.length > 0 ? (
                 <div className="atlas-stack">
                   {tasks.slice(0, 6).map((task) => (
-                    <div className="atlas-status-row" key={task.id}>
-                      <b>{formatDisplayValue(task.title || task.next_task)}</b>
-                      <span>{formatDisplayValue(task.task_code || task.id)} · {task.due_date ? formatDeadline(task.due_date) : formatDisplayValue(task.status)} · {emailStatusLabel(task)}</span>
-                    </div>
+                    <ApplicationTaskCard task={task} variant="compact" key={task.id} />
                   ))}
                 </div>
               ) : (
@@ -2257,6 +2349,44 @@ function TrackerPanel({
         </div>
       </div>
     </div>
+  );
+}
+
+function ApplicationTaskCard({
+  task,
+  variant = "board",
+  draggable = false,
+  onDragStart,
+  onDragEnd,
+}: {
+  task: ApplicationTaskRecord;
+  variant?: "board" | "compact";
+  draggable?: boolean;
+  onDragStart?: (event: React.DragEvent<HTMLElement>) => void;
+  onDragEnd?: () => void;
+}) {
+  const dueLabel = task.due_date ? formatDeadline(task.due_date) : "No due date";
+  const opportunityLabel = task.opportunity?.title || task.opportunity_id;
+  const taskCode = task.task_code || task.id;
+  const emailSent = Boolean(task.email_status?.sent);
+  return (
+    <article
+      className={`app-item ${variant === "compact" ? "app-item-compact" : ""} ${draggable ? "draggable" : ""}`.trim()}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+    >
+      <div className="app-item-topline">
+        <strong>{formatDisplayValue(task.title || task.next_task)}</strong>
+        <span className={`task-status-pill ${emailSent ? "sent" : ""}`}>{emailSent ? "Sent" : "No email"}</span>
+      </div>
+      <div className="task-meta-grid">
+        <span><b>ID</b>{formatDisplayValue(taskCode)}</span>
+        <span><b>Opportunity</b>{formatDisplayValue(opportunityLabel)}</span>
+        <span><b>Due</b>{dueLabel}</span>
+      </div>
+      {task.notes && <p>{task.notes}</p>}
+    </article>
   );
 }
 
@@ -2359,12 +2489,14 @@ function DocumentPanel({ token, profile, setOutput, runAction, loading, opportun
     const anchor = window.document.createElement("a");
     anchor.href = url;
     anchor.download = `${document.document_type ?? "document"}-${document.id}.txt`;
+    window.document.body.appendChild(anchor);
     anchor.click();
+    anchor.remove();
     URL.revokeObjectURL(url);
   };
 
   const downloadDocumentFile = async (document: GeneratedDocumentRecord, format: "txt" | "docx") => {
-    const response = await fetch(`${API_BASE}/documents/${document.id}/download?format=${format}`, {
+    const response = await fetch(`${API_URL}/documents/${document.id}/download?format=${format}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!response.ok) {
@@ -2376,7 +2508,9 @@ function DocumentPanel({ token, profile, setOutput, runAction, loading, opportun
     const anchor = window.document.createElement("a");
     anchor.href = url;
     anchor.download = `${document.document_type ?? "document"}-${document.id}.${format}`;
+    window.document.body.appendChild(anchor);
     anchor.click();
+    anchor.remove();
     URL.revokeObjectURL(url);
   };
 
@@ -2388,7 +2522,7 @@ function DocumentPanel({ token, profile, setOutput, runAction, loading, opportun
 
       <div className="atlas-body">
         <div className="atlas-layout-3">
-          <div className="atlas-card">
+          <div className="atlas-card document-generate-card">
             <div className="atlas-card-inner">
               <div className="atlas-card-title">Generate document</div>
               <div className="atlas-card-subtitle">Use profile data, uploaded files, and opportunity details.</div>
@@ -2417,10 +2551,12 @@ function DocumentPanel({ token, profile, setOutput, runAction, loading, opportun
                 ))}
               </select></label>
           {selectedUpload ? (
-            <div className="upload-context">
-              <strong>Using uploaded document</strong>
-              <span>{uploadPurposeLabel(selectedUpload)} · {selectedUploadName}</span>
-              <p>{(selectedUpload.extracted_text ?? "").slice(0, 260)}{(selectedUpload.extracted_text?.length ?? 0) > 260 ? "..." : ""}</p>
+            <div className="upload-context upload-context-compact">
+              <div>
+                <strong>Using uploaded document</strong>
+                <span>{uploadPurposeLabel(selectedUpload)} · {selectedUploadName}</span>
+              </div>
+              <p>{(selectedUpload.extracted_text ?? "").slice(0, 220)}{(selectedUpload.extracted_text?.length ?? 0) > 220 ? "..." : ""}</p>
             </div>
           ) : (
             <label className="atlas-field-space"><span className="atlas-label">Profile or CV context</span><textarea className="atlas-input" value={cvText} onChange={(event) => setCvText(event.target.value)} placeholder="Paste CV, transcript, achievements, or relevant background text here." /></label>
@@ -2446,7 +2582,10 @@ function DocumentPanel({ token, profile, setOutput, runAction, loading, opportun
           >
             <div className="atlas-card-inner">
               <div className="atlas-card-title">Draft preview</div>
-              <div className="atlas-card-subtitle">Preview the generated draft here.</div>
+              <div className="atlas-card-subtitle draft-preview-subtitle">
+                <span>Preview the generated draft here.</span>
+                <span>Click the preview to view and edit the full document.</span>
+              </div>
               <div className="doc-stage">
                 <div className="paper">
                   <h3>{documentType === "sop" ? "SOP Draft" : documentType === "cv_review" ? "CV Review" : documentType === "recommendation_letter" ? "Recommendation" : "Draft"}</h3>
@@ -2472,7 +2611,6 @@ function DocumentPanel({ token, profile, setOutput, runAction, loading, opportun
                       ))}
                     </motion.div>
                   </AnimatePresence>
-                  <div className="paper-footer-hint">Click to view/edit</div>
                 </div>
               </div>
             </div>
@@ -2538,7 +2676,14 @@ function DocumentPanel({ token, profile, setOutput, runAction, loading, opportun
                     <button onClick={() => setDraftViewOpen(false)}>Back</button>
                     <button onClick={() => saveEditedDocument(selectedDocument)} disabled={loading.documents}>Save</button>
                     <button onClick={() => downloadDocument(selectedDocument)}>Download txt</button>
-                    <button onClick={() => downloadDocumentFile(selectedDocument, "docx")}>Download docx</button>
+                    <button
+                      onClick={() => runAction("documents", "Preparing DOCX download...", async () => {
+                        await downloadDocumentFile(selectedDocument, "docx");
+                      }, "DOCX download ready.")}
+                      disabled={loading.documents}
+                    >
+                      Download docx
+                    </button>
                   </div>
                 </div>
 
@@ -3011,16 +3156,6 @@ function SkeletonBlock({ lines = 3 }: { lines?: number }) {
 function EmptyState({ title, detail, action }: { title: string; detail: string; action?: React.ReactNode }) {
   return (
     <motion.div className="empty-state" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-      <svg viewBox="0 0 220 150" role="img" aria-label="Compass route illustration">
-        <path d="M28 112 C58 82, 82 130, 112 98 S166 67, 194 104" fill="none" stroke="#16897a" strokeWidth="7" strokeLinecap="round" strokeDasharray="2 15" />
-        <circle cx="48" cy="54" r="23" fill="#e8f3f1" />
-        <path d="M48 33 L57 57 L48 75 L39 57 Z" fill="#16897a" />
-        <circle cx="48" cy="54" r="5" fill="#ffffff" />
-        <rect x="118" y="30" width="58" height="72" rx="8" fill="#eef4ff" />
-        <path d="M130 50 H164 M130 66 H158 M130 82 H150" stroke="#2454a6" strokeWidth="6" strokeLinecap="round" />
-        <circle cx="180" cy="105" r="15" fill="#fff4df" />
-        <path d="M180 95 V115 M170 105 H190" stroke="#b98217" strokeWidth="5" strokeLinecap="round" />
-      </svg>
       <div>
         <h3>{title}</h3>
         <p>{detail}</p>
@@ -3044,13 +3179,50 @@ function LoadingNote({ title, detail }: { title: string; detail: string }) {
 
 function NotificationBar({ notice, onClose }: { notice: Notice; onClose: () => void }) {
   if (!notice) return null;
+  const title = notice.kind === "success" ? "Compass update" : "Compass needs attention";
+  const detail = notice.message === "Signed in successfully." ? "Your Compass workspace is ready." : notice.message;
   return (
-    <div className={`notification-bar ${notice.kind}`} role="status" aria-live="polite">
-      {notice.kind === "success" ? <CheckCircle2 size={18} /> : <CircleAlert size={18} />}
-      <span>{notice.message}</span>
-      <button className="icon-button" onClick={onClose} aria-label="Dismiss notification">
-        <X size={16} />
+    <div className={`compass-toast show ${notice.kind}`} role="status" aria-live="polite">
+      <div className="toast-glow" />
+      <div className="toast-icon">
+        <span>{notice.kind === "success" ? "✓" : "!"}</span>
+      </div>
+      <div className="toast-content">
+        <strong>{title}</strong>
+        <p>{detail}</p>
+      </div>
+      <button className="toast-close" onClick={onClose} aria-label="Dismiss notification">
+        ×
       </button>
+      <div className="toast-progress" />
+    </div>
+  );
+}
+
+function ConfirmationToast({ confirmation, onClose }: { confirmation: ConfirmationRequest | null; onClose: () => void }) {
+  if (!confirmation) return null;
+  const confirm = async () => {
+    await confirmation.onConfirm();
+    onClose();
+  };
+  return (
+    <div className="compass-toast compass-confirm show" role="alertdialog" aria-live="assertive">
+      <div className="toast-glow" />
+      <div className="toast-icon">
+        <span>?</span>
+      </div>
+      <div className="toast-content">
+        <strong>{confirmation.title}</strong>
+        <p>{confirmation.detail}</p>
+      </div>
+      <div className="toast-actions">
+        <button className="toast-action ghost" onClick={onClose}>
+          {confirmation.cancelLabel || "Cancel"}
+        </button>
+        <button className="toast-action primary" onClick={confirm}>
+          {confirmation.confirmLabel || "Confirm"}
+        </button>
+      </div>
     </div>
   );
 }

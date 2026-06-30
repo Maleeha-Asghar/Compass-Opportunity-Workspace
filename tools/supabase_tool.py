@@ -1,5 +1,5 @@
 from typing import Any
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from uuid import UUID
 
 from app.config import Settings, get_settings
@@ -330,12 +330,46 @@ class SupabaseRepository:
             return str(opportunity_id)
         return str(self.get_opportunity(opportunity_id)["internal_id"])
 
+    def update_opportunity_deadline_verification(self, opportunity_id: str, verification: dict[str, Any]) -> dict[str, Any]:
+        opportunity = self.get_opportunity(opportunity_id)
+        current_verification = opportunity.get("verification") or {}
+        payload: dict[str, Any] = {
+            "verification": {
+                **current_verification,
+                "deadline_verification": verification,
+            },
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        deadline = verification.get("deadline")
+        if deadline and verification.get("status") in {"verified", "estimated"} and self._is_current_or_future_date(deadline):
+            payload["deadline"] = deadline
+        elif opportunity.get("deadline") and not self._is_current_or_future_date(opportunity["deadline"]):
+            payload["deadline"] = None
+        rows = (
+            self.client()
+            .table("opportunities")
+            .update(payload)
+            .eq("id", opportunity["internal_id"])
+            .execute()
+            .data
+        )
+        if not rows:
+            raise ValueError(f"Opportunity not found: {opportunity_id}")
+        return self._display_opportunity(rows[0])
+
     @staticmethod
     def _is_uuid(value: str) -> bool:
         try:
             UUID(str(value))
             return True
         except ValueError:
+            return False
+
+    @staticmethod
+    def _is_current_or_future_date(value: object) -> bool:
+        try:
+            return date.fromisoformat(str(value)[:10]) >= date.today()
+        except (TypeError, ValueError):
             return False
 
     @staticmethod
@@ -485,6 +519,25 @@ class SupabaseRepository:
             row["opportunity_id"] = opportunity["internal_id"]
         saved = self.client().table("application_tasks").insert(row).execute().data[0]
         return self._display_application_task(saved, display_opportunity_id=display_opportunity_id)
+
+    def update_application_task_status(self, user_id: str, task_id: str, status: str) -> dict[str, Any]:
+        normalized_status = " ".join(str(status).strip().lower().replace("_", " ").split())
+        if normalized_status not in {"pending", "preparing", "submitted", "waiting", "result"}:
+            raise ValueError("Unsupported tracker status.")
+        query = (
+            self.client()
+            .table("application_tasks")
+            .update({"status": normalized_status})
+            .eq("user_id", user_id)
+        )
+        if self._is_uuid(task_id):
+            query = query.eq("id", task_id)
+        else:
+            query = query.like("id", f"{task_id}%")
+        rows = query.execute().data
+        if not rows:
+            raise ValueError("Tracker task not found.")
+        return self._display_application_task(rows[0])
 
     def upload_file(self, bucket: str, path: str, content: bytes, content_type: str) -> dict[str, Any]:
         response = self.client().storage.from_(bucket).upload(
@@ -681,12 +734,39 @@ class SupabaseRepository:
         return self.client().table("notification_preferences").upsert(payload).execute().data[0]
 
     def list_due_reminder_tasks(self) -> list[dict[str, Any]]:
-        return (
+        rows = (
             self.client()
             .rpc("due_reminder_tasks")
             .execute()
             .data
         )
+        if not rows:
+            return []
+        task_ids = [str(row["task_id"]) for row in rows if row.get("task_id")]
+        if not task_ids:
+            return rows
+        task_details = (
+            self.client()
+            .table("application_tasks")
+            .select("id, opportunity_id, opportunities(public_code,title,provider,country,funding_type,deadline,application_url)")
+            .in_("id", task_ids)
+            .execute()
+            .data
+        )
+        details_by_id = {str(row.get("id")): row for row in task_details}
+        enriched = []
+        for row in rows:
+            detail = details_by_id.get(str(row.get("task_id"))) or {}
+            opportunity = detail.get("opportunities") or {}
+            enriched.append(
+                {
+                    **row,
+                    "opportunity_id": opportunity.get("public_code") or detail.get("opportunity_id"),
+                    "final_deadline": opportunity.get("deadline") or row.get("due_date"),
+                    "opportunity": opportunity or None,
+                }
+            )
+        return enriched
 
     def has_reminder_delivery(self, task_id: str, reminder_date: str, notification_email: str) -> bool:
         rows = (

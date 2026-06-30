@@ -20,10 +20,12 @@ def send_due_reminders() -> list[dict]:
         if repository.has_reminder_delivery(task["task_id"], reminder_date, task["notification_email"]):
             continue
         message = agent.format_reminder(task)
+        html_message = agent.format_reminder_html(task)
         response = email_client.send(
             to_email=task["notification_email"],
             subject="Compass application reminder",
             text=message,
+            html=html_message,
         )
         repository.save_reminder_delivery(
             {
