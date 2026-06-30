@@ -1,4 +1,5 @@
 import requests
+import socket
 import smtplib
 from email.message import EmailMessage
 
@@ -32,11 +33,37 @@ class EmailClient:
                 smtp.login(self.settings.smtp_username, self.settings.smtp_password)
                 smtp.send_message(message)
         else:
-            with smtplib.SMTP(self.settings.smtp_host, self.settings.smtp_port, timeout=30) as smtp:
-                smtp.starttls()
-                smtp.login(self.settings.smtp_username, self.settings.smtp_password)
-                smtp.send_message(message)
+            try:
+                with smtplib.SMTP(self.settings.smtp_host, self.settings.smtp_port, timeout=30) as smtp:
+                    smtp.starttls()
+                    smtp.login(self.settings.smtp_username, self.settings.smtp_password)
+                    smtp.send_message(message)
+            except OSError as exc:
+                if exc.errno != 101:
+                    raise
+                self._send_smtp_ipv4(message)
         return {"provider": "smtp", "to": to_email, "sent": True}
+
+    def _send_smtp_ipv4(self, message: EmailMessage) -> None:
+        host = self.settings.smtp_host
+        port = self.settings.smtp_port
+        if not host:
+            raise RuntimeError("EMAIL_HOST is required for SMTP.")
+        addresses = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)
+        last_error: Exception | None = None
+        for _family, _type, _proto, _canonname, sockaddr in addresses:
+            try:
+                with smtplib.SMTP(timeout=30) as smtp:
+                    smtp.connect(sockaddr[0], port)
+                    smtp._host = host
+                    smtp.starttls()
+                    smtp.login(self.settings.smtp_username, self.settings.smtp_password)
+                    smtp.send_message(message)
+                    return
+            except Exception as exc:
+                last_error = exc
+        if last_error:
+            raise last_error
 
     @staticmethod
     def _send_resend(
