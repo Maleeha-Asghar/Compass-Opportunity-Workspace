@@ -144,8 +144,12 @@ class Settings(BaseSettings):
             for origin in self.cors_allowed_origins.split(",")
             if origin.strip()
         ]
-        local = ["http://127.0.0.1:5173", "http://localhost:5173"]
-        return [*local, *configured]
+        defaults = [
+            "http://127.0.0.1:5173",
+            "http://localhost:5173",
+            "https://compass-opportunity-workspace.vercel.app",
+        ]
+        return [*defaults, *configured]
 
     def is_allowed_cors_origin(self, origin: str | None) -> bool:
         if not origin:
